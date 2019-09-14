@@ -61,19 +61,11 @@ public class AStar extends Pathfinder{
 
 	@Override
 	public Optional<Double> getDirectDistance(String startCity, String endCity) {
-		double dist = Double.MAX_VALUE;
-		
-		//Search for shortest direct edge between two cities
 		for(Edge edge : graph.cities.get(startCity).edges) {
-			if(edge.cityEnd.name.equals(endCity) && edge.distanceApart < dist) {
-				dist = edge.distanceApart;
+			if(edge.cityEnd.name.equals(endCity)) {
+				return Optional.of(edge.distanceApart);
 			}
 		}
-		
-		if(dist != Double.MAX_VALUE) {
-			return Optional.of(dist);
-		}
-		
 		return Optional.empty();
 	}
 
