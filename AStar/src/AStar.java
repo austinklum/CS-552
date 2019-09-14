@@ -26,7 +26,7 @@ public class AStar extends Pathfinder{
 		String cityName = "";
 		double lat = 0, lon = 0;
 		//Add city
-		addCity(cityName,lat,lon);
+		graph.addCity(cityName,lat,lon);
 		
 		// While adding edges
 		
@@ -35,7 +35,7 @@ public class AStar extends Pathfinder{
 		double distance = 0;
 		
 		//Add Edge
-		addEdge(startCity,endCity,distance);
+		graph.addEdge(startCity,endCity,distance);
 	}
 	
 	
@@ -50,6 +50,8 @@ public class AStar extends Pathfinder{
 		// while not at end city
 		
 		// Expand top priority node
+		
+		// Add stats to FoundPath
 				
 		// calculate possible edges 
 		
@@ -59,8 +61,20 @@ public class AStar extends Pathfinder{
 
 	@Override
 	public Optional<Double> getDirectDistance(String startCity, String endCity) {
-		// TODO Auto-generated method stub
-		return null;
+		double dist = Double.MAX_VALUE;
+		
+		//Search for shortest direct edge between two cities
+		for(Edge edge : graph.cities.get(startCity).edges) {
+			if(edge.cityEnd.name.equals(endCity) && edge.distanceApart < dist) {
+				dist = edge.distanceApart;
+			}
+		}
+		
+		if(dist != Double.MAX_VALUE) {
+			return Optional.of(dist);
+		}
+		
+		return Optional.empty();
 	}
 
 	@Override
