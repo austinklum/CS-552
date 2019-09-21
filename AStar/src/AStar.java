@@ -63,7 +63,7 @@ public class AStar extends Pathfinder{
 		for(int i = 0; i < 3; i++) {
 			matcher.find();
 			infoArr[i] = matcher.group();
-			printMsg(matcher.group(),2);
+			printMsg(matcher.group(), 2);
 		}
 		return infoArr;
 	}
@@ -87,7 +87,7 @@ public class AStar extends Pathfinder{
 		while(!currentCity.name.equals(endCity)) {
 			
 		// Expand top priority node
-		
+			
 		// Add stats to FoundPath
 				
 		// calculate possible edges 
@@ -112,6 +112,37 @@ public class AStar extends Pathfinder{
 		return (List<String>) graph.cities.keySet();
 	}
 	
+	private double getHeuristic(String city1, String city2) {
+		
+	City cityStart = graph.cities.get(city1);
+	City cityEnd = graph.cities.get(city2);
+	
+	double Rm = 3961; // mean radius of the earth (miles) at 39 degrees from the equator
+	
+	// convert coordinates to radians
+	double lat1 = deg2rad(cityStart.lat);
+	double lon1 = deg2rad(cityStart.lon);
+	double lat2 = deg2rad(cityEnd.lat);
+	double lon2 = deg2rad(cityEnd.lon);
+	
+	// find the differences between the coordinates
+	double dlat = lat2 - lat1;
+	double dlon = lon2 - lon1;
+	
+	// here's the heavy lifting
+	double a  = Math.pow(Math.sin(dlat/2),2) + Math.cos(lat1) * Math.cos(lat2) * Math.pow(Math.sin(dlon/2),2);
+	double c  = 2 * Math.atan2(Math.sqrt(a),Math.sqrt(1-a)); // great circle distance in radians
+	double dm = c * Rm; // great circle distance in miles
+	
+	return dm;
+}
+
+
+	// convert degrees to radians
+	private double deg2rad(double deg) {
+		return deg * Math.PI/180; // radians = degrees * pi/180
+	}
+		
 	class Graph {
 		HashMap<String,City> cities;
 		
