@@ -34,7 +34,7 @@ public class AStar extends Pathfinder{
 			e.printStackTrace();
 		}
 
-		System.out.println("Loading...");
+		printMsg("Loading...", 1);
 		while(scan.hasNext()) {
 			String regexCities = "([a-zA-Z]+(-?| ?)[a-zA-z]+)\\s+(-?(\\d*.\\d*))\\s+(-?(\\d*.\\d*))";
 			line = scan.nextLine();
@@ -51,7 +51,7 @@ public class AStar extends Pathfinder{
 				graph.addEdge(infoArr[0], infoArr[1], Double.valueOf(infoArr[2]));
 			}
 		}
-		System.out.println("Done!");
+		printMsg("Done!", 1);
 	}
 	
 	private String[] parseLine(String line) {
@@ -69,6 +69,12 @@ public class AStar extends Pathfinder{
 	@Override
 	public void setVerbose(int level) {
 		verboseLevel = level;
+	}
+	
+	private void printMsg(String msg, int level) {
+		if(verboseLevel >= level) {
+			System.out.println(msg);
+		}
 	}
 
 	@Override
