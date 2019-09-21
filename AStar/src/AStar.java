@@ -59,9 +59,11 @@ public class AStar extends Pathfinder{
 		Matcher matcher = Pattern.compile(splitter).matcher(line);
 		String[] infoArr = new String[3];
 		
+		printMsg("Parsing Line: " + line, 2);
 		for(int i = 0; i < 3; i++) {
 			matcher.find();
 			infoArr[i] = matcher.group();
+			printMsg(matcher.group(),2);
 		}
 		return infoArr;
 	}
