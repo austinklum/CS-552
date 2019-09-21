@@ -1,15 +1,20 @@
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.PriorityQueue;
+import java.util.Scanner;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class AStar extends Pathfinder{
 
 	int verboseLevel;
 	PriorityQueue<Double> frontier;
 	Graph graph;
-
+	FoundPath foundPath;
 	
 	AStar(String fileName) {
 		verboseLevel = 0;
@@ -19,26 +24,47 @@ public class AStar extends Pathfinder{
 	}
 	
 	private void parseFile(String fileName) {
+
+		String line = "";
+		Scanner scan = null;
 		
-		//While adding cities
-		
-		//split up line
-		String cityName = "";
-		double lat = 0, lon = 0;
-		//Add city
-		graph.addCity(cityName,lat,lon);
-		
-		// While adding edges
-		
-		//split up line
-		String startCity = "", endCity = "";
-		double distance = 0;
-		
-		//Add Edge
-		graph.addEdge(startCity,endCity,distance);
+		try {
+			scan = new Scanner(new File(fileName));
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+
+		System.out.println("Loading...");
+		while(scan.hasNext()) {
+			String regexCities = "([a-zA-Z]+(-?| ?)[a-zA-z]+)\\s+(-?(\\d*.\\d*))\\s+(-?(\\d*.\\d*))";
+			line = scan.nextLine();
+			
+			if (line.contains("#")) { // Ignore lines with #
+				continue;
+			}
+			
+			String[] infoArr = parseLine(line);
+			
+			if(Pattern.matches(regexCities, line)) { // Add city
+				graph.addCity(infoArr[0], Double.valueOf(infoArr[1]), Double.valueOf(infoArr[2]));
+			} else { // Add edge
+				graph.addEdge(infoArr[0], infoArr[1], Double.valueOf(infoArr[2]));
+			}
+		}
+		System.out.println("Done!");
 	}
 	
-	
+	private String[] parseLine(String line) {
+		String splitter = "([a-zA-Z]+(-?| ?)[a-zA-z]+)|(-?(\\d+.\\d*))";
+		Matcher matcher = Pattern.compile(splitter).matcher(line);
+		String[] infoArr = new String[3];
+		
+		for(int i = 0; i < 3; i++) {
+			matcher.find();
+			infoArr[i] = matcher.group();
+		}
+		return infoArr;
+	}
 	
 	@Override
 	public void setVerbose(int level) {
@@ -47,8 +73,11 @@ public class AStar extends Pathfinder{
 
 	@Override
 	public FoundPath getPathInfo(String startCity, String endCity) {
-		// while not at end city
+		City currentCity = graph.cities.get(startCity);
 		
+		// while not at end city
+		while(!currentCity.name.equals(endCity)) {
+			
 		// Expand top priority node
 		
 		// Add stats to FoundPath
@@ -56,6 +85,7 @@ public class AStar extends Pathfinder{
 		// calculate possible edges 
 		
 		// add to frontier
+		}
 		return null;
 	}
 
