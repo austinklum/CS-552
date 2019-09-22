@@ -1,5 +1,7 @@
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -12,14 +14,21 @@ import java.util.regex.Pattern;
 public class AStar extends Pathfinder{
 
 	int verboseLevel;
-	PriorityQueue<Double> frontier;
+	PriorityQueue<City> frontier;
 	Graph graph;
 	FoundPath foundPath;
 	
+	
+	
 	AStar(String fileName) {
 		verboseLevel = 0;
-		frontier = new PriorityQueue<>();
 		graph = new Graph();
+		Comparator<City> cityComp = new Comparator<City>() {
+		    public int compare(City city1, City city2) {
+		    	return (int) (city1.pastCost - city2.pastCost);
+		    }
+		};
+		frontier = new PriorityQueue<City>(cityComp);
 		parseFile(fileName);
 	}
 	
@@ -81,20 +90,33 @@ public class AStar extends Pathfinder{
 
 	@Override
 	public FoundPath getPathInfo(String startCity, String endCity) {
+		PathFound myPath = new PathFound();
 		City currentCity = graph.cities.get(startCity);
+		City goalCity = graph.cities.get(endCity);
+		frontier.add(currentCity);
+		myPath.totalNodes++;
 		
 		// while not at end city
+		printMsg("Searching for path between " + startCity + " and " + endCity, 1);
 		while(!currentCity.name.equals(endCity)) {
-			
+			printMsg("Searching...", 1);
 		// Expand top priority node
-			
+			currentCity = frontier.poll();
 		// Add stats to FoundPath
-				
+			myPath.openNodes++;
+			myPath.totalCost += currentCity.pastCost;
 		// calculate possible edges 
-		
-		// add to frontier
+			for(Edge edge : currentCity.edges) {
+				double cost = getHeuristic(currentCity,goalCity) 
+						 	+ currentCity.pastCost 
+						 	+ edge.distanceApart;
+				edge.cityEnd.pastCost = cost;
+				frontier.add(edge.cityEnd);	
+				myPath.totalNodes++;
+			}
 		}
-		return null;
+		printMsg("Search Complete!",1);
+		return myPath;
 	}
 
 	@Override
@@ -112,11 +134,8 @@ public class AStar extends Pathfinder{
 		return (List<String>) graph.cities.keySet();
 	}
 	
-	private double getHeuristic(String city1, String city2) {
+	private double getHeuristic(City cityStart, City cityEnd) {
 		
-	City cityStart = graph.cities.get(city1);
-	City cityEnd = graph.cities.get(city2);
-	
 	double Rm = 3961; // mean radius of the earth (miles) at 39 degrees from the equator
 	
 	// convert coordinates to radians
@@ -125,11 +144,9 @@ public class AStar extends Pathfinder{
 	double lat2 = deg2rad(cityEnd.lat);
 	double lon2 = deg2rad(cityEnd.lon);
 	
-	// find the differences between the coordinates
 	double dlat = lat2 - lat1;
 	double dlon = lon2 - lon1;
 	
-	// here's the heavy lifting
 	double a  = Math.pow(Math.sin(dlat/2),2) + Math.cos(lat1) * Math.cos(lat2) * Math.pow(Math.sin(dlon/2),2);
 	double c  = 2 * Math.atan2(Math.sqrt(a),Math.sqrt(1-a)); // great circle distance in radians
 	double dm = c * Rm; // great circle distance in miles
@@ -166,13 +183,20 @@ public class AStar extends Pathfinder{
 		public String name;
 		public double lat;
 		public double lon;
+		public double pastCost;
 		LinkedList<Edge> edges;
 		
 		City(String name, double lat, double lon){
+			pastCost = 0;
 			this.name = name;
 			this.lat = lat;
 			this.lon = lon;
 			edges = new LinkedList<>();
+		}
+		
+		@Override
+		public String toString() {
+			return name + " :: " + pastCost + " :: " + lat + " :: " + lon;
 		}
 	}
 	
@@ -186,6 +210,58 @@ public class AStar extends Pathfinder{
 			this.cityEnd = cityEnd;
 			this.distanceApart = distanceApart;
 		}
+		
+		@Override
+		public String toString() {
+			return cityStart.name + " => " + cityEnd.name + " :: " + distanceApart;
+		}
+		
 	}
 	
+	class PathFound implements FoundPath {
+		List<String> path;
+		int totalNodes;
+		int totalCost;
+		int openNodes;
+		
+		PathFound() {
+			path = new LinkedList<>();
+			totalNodes = 0;
+			totalCost = 0;
+			openNodes = 0;
+		}
+		
+		@Override
+		public List<String> getPath() {
+			return path;
+		}
+
+		@Override
+		public Optional<Integer> getTotalCost() {
+			return Optional.of(totalCost);
+		}
+
+		@Override
+		public int totalNodes() {
+			return totalNodes;
+		}
+
+		@Override
+		public int openNodes() {
+			return openNodes;
+		}
+		
+		@Override
+		public String toString() {
+			StringBuilder sb = new StringBuilder();
+			for(String city : path) {
+				sb.append(" -> ");
+				sb.append(city);
+				sb.append("\n");
+			}
+			return sb.toString();
+		}
+	}
 }
+
+
