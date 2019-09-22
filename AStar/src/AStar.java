@@ -45,7 +45,7 @@ public class AStar extends Pathfinder{
 
 		printMsg("Loading...", 1);
 		while(scan.hasNext()) {
-			String regexCities = "([a-zA-Z]+(-?| ?)[a-zA-z]+)\\s+(-?(\\d*.\\d*))\\s+(-?(\\d*.\\d*))";
+			String regexCities = "([a-zA-z(-)]+((-?| ?)[a-zA-z(-)])+)|\\s+(-?(\\d*.\\d*))\\s+(-?(\\d*.\\d*))";
 			line = scan.nextLine();
 			
 			if (line.contains("#")) { // Ignore lines with #
@@ -54,7 +54,7 @@ public class AStar extends Pathfinder{
 			
 			String[] infoArr = parseLine(line);
 			
-			if(Pattern.matches(regexCities, line)) { // Add city
+			if(!line.contains(",")) { // Add city
 				graph.addCity(infoArr[0], Double.valueOf(infoArr[1]), Double.valueOf(infoArr[2]));
 			} else { // Add edge
 				graph.addEdge(infoArr[0], infoArr[1], Double.valueOf(infoArr[2]));
@@ -64,7 +64,7 @@ public class AStar extends Pathfinder{
 	}
 	
 	private String[] parseLine(String line) {
-		String splitter = "([a-zA-Z]+(-?| ?)[a-zA-z]+)|(-?(\\d+.\\d*))";
+		String splitter = "([a-zA-z(-)'-']+((-?| ?)[a-zA-z(-)'-'])+)|(-?(\\d+.\\d*))";
 		Matcher matcher = Pattern.compile(splitter).matcher(line);
 		String[] infoArr = new String[3];
 		
@@ -99,29 +99,44 @@ public class AStar extends Pathfinder{
 		// while not at end city
 		printMsg("Searching for path between " + startCity + " and " + endCity, 1);
 		while(!currentCity.name.equals(endCity)) {
-			printMsg("Searching...", 1);
+			printMsg("\nSearching...", 1);
 		// Expand top priority node
 			currentCity = frontier.poll();
+			printMsg("Expanded " + currentCity,2);
 		// Add stats to FoundPath
 			myPath.openNodes++;
 			myPath.totalCost += currentCity.pastCost;
 		// calculate possible edges 
-			for(Edge edge : currentCity.edges) {
+			for(Edge edge : graph.edges.get(currentCity.name)) {
+				double gn = currentCity.pastCost + edge.distanceApart;
+				double hn = getHeuristic(currentCity,goalCity);
 				double cost = getHeuristic(currentCity,goalCity) 
 						 	+ currentCity.pastCost 
 						 	+ edge.distanceApart;
-				edge.cityEnd.pastCost = cost;
-				frontier.add(edge.cityEnd);	
+				printMsg(edge.cityEnd.name + " :: f(n) = " + cost + " = " + gn + " + " + hn, 2);
+				City copy = edge.cityEnd.copy();
+				copy.pastCost = cost;
+				copy.pastCity = edge.cityStart;
+				frontier.add(copy);	
 				myPath.totalNodes++;
 			}
 		}
+		// Final Path
+		LinkedList<String> path = new LinkedList<>();
+		while(currentCity.pastCity != null) {
+			path.add(currentCity.name);
+			currentCity = currentCity.pastCity;
+		}
+		path.add(startCity);
+		myPath.path = path;
+		
 		printMsg("Search Complete!",1);
 		return myPath;
 	}
 
 	@Override
 	public Optional<Double> getDirectDistance(String startCity, String endCity) {
-		for(Edge edge : graph.cities.get(startCity).edges) {
+		for(Edge edge : graph.edges.get(startCity)) {
 			if(edge.cityEnd.name.equals(endCity)) {
 				return Optional.of(edge.distanceApart);
 			}
@@ -162,20 +177,23 @@ public class AStar extends Pathfinder{
 		
 	class Graph {
 		HashMap<String,City> cities;
+		HashMap<String,LinkedList<Edge>> edges;
 		
 		Graph(){
 			cities = new HashMap<>();
+			edges = new HashMap<>();
 		}
 		
 		private void addCity(String cityName, double lat, double lon) {
 			cities.put(cityName, new City(cityName,lat,lon));
+			edges.put(cityName, new LinkedList<>());
 		}
 		
 		private void addEdge(String startCity, String endCity, double distanceApart) {
 			City start = cities.get(startCity);
 			City end = cities.get(endCity);
-			start.edges.add(new Edge(start,end,distanceApart));
-			end.edges.add(new Edge(end,start,distanceApart));
+			edges.get(startCity).add(new Edge(start,end,distanceApart));
+			edges.get(endCity).add(new Edge(end,start,distanceApart));
 		}
 	}
 	
@@ -184,19 +202,29 @@ public class AStar extends Pathfinder{
 		public double lat;
 		public double lon;
 		public double pastCost;
-		LinkedList<Edge> edges;
+		public City pastCity;
 		
 		City(String name, double lat, double lon){
 			pastCost = 0;
 			this.name = name;
 			this.lat = lat;
 			this.lon = lon;
-			edges = new LinkedList<>();
+		}
+		
+		City(String name, double lat, double lon, double pastCost){
+			this.pastCost = pastCost;
+			this.name = name;
+			this.lat = lat;
+			this.lon = lon;
+		}
+		
+		private City copy() {
+			return new City(name,lat,lon,pastCost);
 		}
 		
 		@Override
 		public String toString() {
-			return name + " :: " + pastCost + " :: " + lat + " :: " + lon;
+			return name + " :: " + pastCost;
 		}
 	}
 	
@@ -219,13 +247,12 @@ public class AStar extends Pathfinder{
 	}
 	
 	class PathFound implements FoundPath {
-		List<String> path;
 		int totalNodes;
 		int totalCost;
 		int openNodes;
+		List<String> path;
 		
 		PathFound() {
-			path = new LinkedList<>();
 			totalNodes = 0;
 			totalCost = 0;
 			openNodes = 0;
@@ -255,7 +282,7 @@ public class AStar extends Pathfinder{
 		public String toString() {
 			StringBuilder sb = new StringBuilder();
 			for(String city : path) {
-				sb.append(" -> ");
+				sb.append(" => ");
 				sb.append(city);
 				sb.append("\n");
 			}
