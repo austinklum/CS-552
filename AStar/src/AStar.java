@@ -102,20 +102,26 @@ public class AStar extends Pathfinder{
 			printMsg("\nSearching...", 1);
 		// Expand top priority node
 			currentCity = frontier.poll();
-			printMsg("Expanded " + currentCity,2);
+			StringBuilder pCit = new StringBuilder(" => ");
+			City tempCity = currentCity;
+			while(tempCity.pastCity != null) {
+				pCit.insert(0, " => " + tempCity.pastCity.name); 
+				tempCity = tempCity.pastCity;
+			}
+			printMsg("Expanded " + pCit + currentCity,2);
 		// Add stats to FoundPath
 			myPath.openNodes++;
 			myPath.totalCost += currentCity.pastCost;
 		// calculate possible edges 
 			for(Edge edge : graph.edges.get(currentCity.name)) {
 				double gn = currentCity.pastCost + edge.distanceApart;
-				double hn = getHeuristic(currentCity,goalCity);
-				double cost = getHeuristic(currentCity,goalCity) 
+				double hn = getHeuristic(edge.cityEnd,goalCity);
+				double cost = getHeuristic(edge.cityEnd,goalCity) 
 						 	+ currentCity.pastCost 
 						 	+ edge.distanceApart;
-				printMsg(edge.cityEnd.name + " :: f(n) = " + cost + " = " + gn + " + " + hn, 2);
+				printMsg(edge.cityEnd.name + "  :: f(n) = " + cost + " = (" + edge.distanceApart + " + " + currentCity.pastCost + ") + " + hn, 2);
 				City copy = edge.cityEnd.copy();
-				copy.pastCost = cost;
+				copy.pastCost = gn;
 				copy.pastCity = edge.cityStart;
 				frontier.add(copy);	
 				myPath.totalNodes++;
@@ -178,15 +184,18 @@ public class AStar extends Pathfinder{
 	class Graph {
 		HashMap<String,City> cities;
 		HashMap<String,LinkedList<Edge>> edges;
+		HashMap<String,Double> bestCost;
 		
 		Graph(){
 			cities = new HashMap<>();
 			edges = new HashMap<>();
+			bestCost = new HashMap<>();
 		}
 		
 		private void addCity(String cityName, double lat, double lon) {
 			cities.put(cityName, new City(cityName,lat,lon));
 			edges.put(cityName, new LinkedList<>());
+			bestCost.put(cityName,Double.MAX_VALUE);
 		}
 		
 		private void addEdge(String startCity, String endCity, double distanceApart) {
