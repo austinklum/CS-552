@@ -184,18 +184,18 @@ public class AStar extends Pathfinder{
 	class Graph {
 		HashMap<String,City> cities;
 		HashMap<String,LinkedList<Edge>> edges;
-		HashMap<String,Double> bestCost;
+		//HashMap<String,Double> bestCost;
 		
 		Graph(){
 			cities = new HashMap<>();
 			edges = new HashMap<>();
-			bestCost = new HashMap<>();
+		//	bestCost = new HashMap<>();
 		}
 		
 		private void addCity(String cityName, double lat, double lon) {
 			cities.put(cityName, new City(cityName,lat,lon));
 			edges.put(cityName, new LinkedList<>());
-			bestCost.put(cityName,Double.MAX_VALUE);
+			//bestCost.put(cityName,Double.MAX_VALUE);
 		}
 		
 		private void addEdge(String startCity, String endCity, double distanceApart) {
