@@ -25,7 +25,7 @@ public class AStar extends Pathfinder{
 		graph = new Graph();
 		Comparator<City> cityComp = new Comparator<City>() {
 		    public int compare(City city1, City city2) {
-		    	return (int) (city1.pastCost - city2.pastCost);
+		    	return (int) (city1.cost - city2.cost);
 		    }
 		};
 		frontier = new PriorityQueue<City>(cityComp);
@@ -105,7 +105,6 @@ public class AStar extends Pathfinder{
 			getPathHistory(currentCity);
 		// Add stats to FoundPath
 			myPath.openNodes++;
-			myPath.totalCost += currentCity.pastCost;
 		// calculate possible edges 
 			for(Edge edge : graph.edges.get(currentCity.name)) {
 				addNeighbors(myPath, currentCity, goalCity, edge);
@@ -120,24 +119,24 @@ public class AStar extends Pathfinder{
 
 	private void getFinalPathSoln(String startCity, PathFound myPath, City currentCity) {
 		LinkedList<String> path = new LinkedList<>();
+		myPath.totalCost = (int) currentCity.actualCost; 
 		while(currentCity != null) {
 			path.add(currentCity.name);
 			currentCity = currentCity.pastCity;
 		}
-		path.add(startCity);
 		myPath.path = path;
 	}
 
 	private void addNeighbors(PathFound myPath, City currentCity, City goalCity, Edge edge) {
-		double gn = currentCity.pastCost + edge.distanceApart;
+		double gn = currentCity.actualCost + edge.distanceApart;
 		double hn = getHeuristic(edge.cityEnd,goalCity);
-		double cost = getHeuristic(edge.cityEnd,goalCity) 
-				 	+ currentCity.pastCost 
-				 	+ edge.distanceApart;
-		printMsg(edge.cityEnd.name + "  :: f(n) = " + cost + " = (" + edge.distanceApart + " + " + currentCity.pastCost + ") + " + hn, 2);
+		double cost = gn + hn;
+		printMsg(edge.cityEnd.name + "  :: f(n) = " + cost + " = (" + edge.distanceApart + " + " + currentCity.actualCost + ") + " + hn, 2);
+		
 		City copy = edge.cityEnd.copy();
-		copy.pastCost = cost;
-		copy.pastCity = edge.cityStart;
+		copy.cost = cost;
+		copy.actualCost = gn;
+		copy.pastCity = currentCity;
 		frontier.add(copy);	
 		myPath.totalNodes++;
 	}
@@ -222,30 +221,32 @@ public class AStar extends Pathfinder{
 		public String name;
 		public double lat;
 		public double lon;
-		public double pastCost;
+		public double cost;
+		public double actualCost;
 		public City pastCity;
 		
 		City(String name, double lat, double lon){
-			pastCost = 0;
+			cost = 0;
 			this.name = name;
 			this.lat = lat;
 			this.lon = lon;
 		}
 		
-		City(String name, double lat, double lon, double pastCost){
-			this.pastCost = pastCost;
+		City(String name, double lat, double lon, double cost, double actualCost){
+			this.cost = cost;
+			this.actualCost = actualCost;
 			this.name = name;
 			this.lat = lat;
 			this.lon = lon;
 		}
 		
 		private City copy() {
-			return new City(name,lat,lon,pastCost);
+			return new City(name,lat,lon,cost,actualCost);
 		}
 		
 		@Override
 		public String toString() {
-			return name + " :: " + pastCost;
+			return name + " :: " + cost;
 		}
 	}
 	
