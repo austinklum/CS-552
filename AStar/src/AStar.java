@@ -102,42 +102,54 @@ public class AStar extends Pathfinder{
 			printMsg("\nSearching...", 1);
 		// Expand top priority node
 			currentCity = frontier.poll();
-			StringBuilder pCit = new StringBuilder(" => ");
-			City tempCity = currentCity;
-			while(tempCity.pastCity != null) {
-				pCit.insert(0, " => " + tempCity.pastCity.name); 
-				tempCity = tempCity.pastCity;
-			}
-			printMsg("Expanded " + pCit + currentCity,2);
+			getPathHistory(currentCity);
 		// Add stats to FoundPath
 			myPath.openNodes++;
 			myPath.totalCost += currentCity.pastCost;
 		// calculate possible edges 
 			for(Edge edge : graph.edges.get(currentCity.name)) {
-				double gn = currentCity.pastCost + edge.distanceApart;
-				double hn = getHeuristic(edge.cityEnd,goalCity);
-				double cost = getHeuristic(edge.cityEnd,goalCity) 
-						 	+ currentCity.pastCost 
-						 	+ edge.distanceApart;
-				printMsg(edge.cityEnd.name + "  :: f(n) = " + cost + " = (" + edge.distanceApart + " + " + currentCity.pastCost + ") + " + hn, 2);
-				City copy = edge.cityEnd.copy();
-				copy.pastCost = gn;
-				copy.pastCity = edge.cityStart;
-				frontier.add(copy);	
-				myPath.totalNodes++;
+				addNeighbors(myPath, currentCity, goalCity, edge);
 			}
 		}
 		// Final Path
+		getFinalPathSoln(startCity, myPath, currentCity);
+		
+		printMsg("Search Complete!",1);
+		return myPath;
+	}
+
+	private void getFinalPathSoln(String startCity, PathFound myPath, City currentCity) {
 		LinkedList<String> path = new LinkedList<>();
-		while(currentCity.pastCity != null) {
+		while(currentCity != null) {
 			path.add(currentCity.name);
 			currentCity = currentCity.pastCity;
 		}
 		path.add(startCity);
 		myPath.path = path;
-		
-		printMsg("Search Complete!",1);
-		return myPath;
+	}
+
+	private void addNeighbors(PathFound myPath, City currentCity, City goalCity, Edge edge) {
+		double gn = currentCity.pastCost + edge.distanceApart;
+		double hn = getHeuristic(edge.cityEnd,goalCity);
+		double cost = getHeuristic(edge.cityEnd,goalCity) 
+				 	+ currentCity.pastCost 
+				 	+ edge.distanceApart;
+		printMsg(edge.cityEnd.name + "  :: f(n) = " + cost + " = (" + edge.distanceApart + " + " + currentCity.pastCost + ") + " + hn, 2);
+		City copy = edge.cityEnd.copy();
+		copy.pastCost = cost;
+		copy.pastCity = edge.cityStart;
+		frontier.add(copy);	
+		myPath.totalNodes++;
+	}
+
+	private void getPathHistory(City currentCity) {
+		StringBuilder pCit = new StringBuilder(" => ");
+		City tempCity = currentCity;
+		while(tempCity.pastCity != null) {
+			pCit.insert(0, " => " + tempCity.pastCity.name); 
+			tempCity = tempCity.pastCity;
+		}
+		printMsg("Expanded " + pCit + currentCity,2);
 	}
 
 	@Override
@@ -184,18 +196,18 @@ public class AStar extends Pathfinder{
 	class Graph {
 		HashMap<String,City> cities;
 		HashMap<String,LinkedList<Edge>> edges;
-		//HashMap<String,Double> bestCost;
+		HashMap<String,Double> bestCost;
 		
 		Graph(){
 			cities = new HashMap<>();
 			edges = new HashMap<>();
-		//	bestCost = new HashMap<>();
+			bestCost = new HashMap<>();
 		}
 		
 		private void addCity(String cityName, double lat, double lon) {
 			cities.put(cityName, new City(cityName,lat,lon));
 			edges.put(cityName, new LinkedList<>());
-			//bestCost.put(cityName,Double.MAX_VALUE);
+			bestCost.put(cityName,Double.MAX_VALUE);
 		}
 		
 		private void addEdge(String startCity, String endCity, double distanceApart) {

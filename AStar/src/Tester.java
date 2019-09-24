@@ -3,7 +3,7 @@ public class Tester {
 	public static void main(String[] args) {
 		AStar astr = new AStar("cities02.txt");
 		astr.verboseLevel = 2;
-		FoundPath fp = astr.getPathInfo("Minneapolis","London");
+		FoundPath fp = astr.getPathInfo("Seattle","Boston");
 		printPath(fp);
 		
 	}
