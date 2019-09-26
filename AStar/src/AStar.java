@@ -18,12 +18,10 @@ public class AStar extends Pathfinder{
 	Graph graph;
 	FoundPath foundPath;
 	
-	
-	
 	AStar(String fileName) {
 		verboseLevel = 0;
 		graph = new Graph();
-		Comparator<City> cityComp = new Comparator<City>() {
+		Comparator<City> cityComp = new Comparator<City>() { // Create compartator object for frontier
 		    public int compare(City city1, City city2) {
 		    	return (int) (city1.cost - city2.cost);
 		    }
@@ -32,6 +30,10 @@ public class AStar extends Pathfinder{
 		parseFile(fileName);
 	}
 	
+	/***
+	 * Parses through the file and creates node set and edge set
+	 * @param fileName Where we will scan and take information from
+	 */
 	private void parseFile(String fileName) {
 
 		String line = "";
@@ -45,13 +47,13 @@ public class AStar extends Pathfinder{
 
 		printMsg("Loading...", 1);
 		while(scan.hasNext()) {
-			String regexCities = "([a-zA-z(-)]+((-?| ?)[a-zA-z(-)])+)|\\s+(-?(\\d*.\\d*))\\s+(-?(\\d*.\\d*))";
 			line = scan.nextLine();
 			
 			if (line.contains("#")) { // Ignore lines with #
 				continue;
 			}
 			
+			// Parse Line into infoArr
 			String[] infoArr = parseLine(line);
 			
 			if(!line.contains(",")) { // Add city
@@ -63,6 +65,11 @@ public class AStar extends Pathfinder{
 		printMsg("Done!", 1);
 	}
 	
+	/***
+	 * Parse the line into an info arr of size 3
+	 * @param line Line that we are parsing
+	 * @return info arr of size 3
+	 */
 	private String[] parseLine(String line) {
 		String splitter = "([a-zA-z(-)'-']+((-?| ?)[a-zA-z(-)'-'])+)|(-?(\\d+.\\d*))";
 		Matcher matcher = Pattern.compile(splitter).matcher(line);
@@ -82,6 +89,11 @@ public class AStar extends Pathfinder{
 		verboseLevel = level;
 	}
 	
+	/***
+	 * Method to print a message depending on the verbosity level
+	 * @param msg String message that will be printed out
+	 * @param level Level of verbosity this should show on.
+	 */
 	private void printMsg(String msg, int level) {
 		if(verboseLevel >= level) {
 			System.out.println(msg);
@@ -90,14 +102,16 @@ public class AStar extends Pathfinder{
 
 	@Override
 	public FoundPath getPathInfo(String startCity, String endCity) {
+		// Init path and starting city
 		PathFound myPath = new PathFound();
 		City currentCity = graph.cities.get(startCity);
 		City goalCity = graph.cities.get(endCity);
 		frontier.add(currentCity);
 		myPath.totalNodes++;
 		
-		// while not at end city
 		printMsg("Searching for path between " + startCity + " and " + endCity, 1);
+		
+		// while not at end city
 		while(!currentCity.name.equals(endCity)) {
 			printMsg("\nSearching...", 1);
 		// Expand top priority node
@@ -117,30 +131,57 @@ public class AStar extends Pathfinder{
 		return myPath;
 	}
 
+	/***
+	 * Creates and sets the LinkedList<String> of the path found
+	 * @param startCity Key of starting city
+	 * @param myPath FoundPath information
+	 * @param currentCity Goal state node with history link back
+	 */
 	private void getFinalPathSoln(String startCity, PathFound myPath, City currentCity) {
 		LinkedList<String> path = new LinkedList<>();
 		myPath.totalCost = (int) currentCity.actualCost; 
+		
+		// Add city names in reserve order to path
 		while(currentCity != null) {
-			path.add(currentCity.name);
+			path.addFirst(currentCity.name);
 			currentCity = currentCity.pastCity;
 		}
 		myPath.path = path;
 	}
 
+	/**
+	 * Adds the neighbors and stats from the neighborhood of the current node
+	 * @param myPath
+	 * @param currentCity
+	 * @param goalCity
+	 * @param edge
+	 */
 	private void addNeighbors(PathFound myPath, City currentCity, City goalCity, Edge edge) {
+		// Calculate cost from g(n) and h(n)
 		double gn = currentCity.actualCost + edge.distanceApart;
 		double hn = getHeuristic(edge.cityEnd,goalCity);
 		double cost = gn + hn;
+		
 		printMsg(edge.cityEnd.name + "  :: f(n) = " + cost + " = (" + edge.distanceApart + " + " + currentCity.actualCost + ") + " + hn, 2);
 		
+		// Create a frontier node
 		City copy = edge.cityEnd.copy();
 		copy.cost = cost;
 		copy.actualCost = gn;
 		copy.pastCity = currentCity;
-		frontier.add(copy);	
-		myPath.totalNodes++;
+		
+		// Add to the frontier if we can find a better costing path
+		if(graph.bestCost.get(copy.name) > copy.actualCost) {
+			graph.bestCost.put(copy.name, copy.actualCost);
+			frontier.add(copy);	
+			myPath.totalNodes++;
+		}
 	}
 
+	/***
+	 * Prints out a list of prev visited cities
+	 * @param currentCity Where we are now in the search
+	 */
 	private void getPathHistory(City currentCity) {
 		StringBuilder pCit = new StringBuilder(" => ");
 		City tempCity = currentCity;
@@ -163,9 +204,19 @@ public class AStar extends Pathfinder{
 
 	@Override
 	public List<String> getCities() {
-		return (List<String>) graph.cities.keySet();
+		List<String> citites = new LinkedList<>();
+		for(String city : graph.cities.keySet()) {
+			citites.add(city);
+		}
+		return citites;
 	}
 	
+	/***
+	 * Get the heuristic value based off haversine function
+	 * @param cityStart Starting City
+	 * @param cityEnd Ending City
+	 * @return heuristic value to travel from starting city to ending city.
+	 */
 	private double getHeuristic(City cityStart, City cityEnd) {
 		
 	double Rm = 3961; // mean radius of the earth (miles) at 39 degrees from the equator
@@ -187,28 +238,44 @@ public class AStar extends Pathfinder{
 }
 
 
-	// convert degrees to radians
+	/***
+	 * Converts Degrees to Radians
+	 * @param deg Degrees
+	 * @return Radian value
+	 */
 	private double deg2rad(double deg) {
 		return deg * Math.PI/180; // radians = degrees * pi/180
 	}
-		
+	
 	class Graph {
 		HashMap<String,City> cities;
 		HashMap<String,LinkedList<Edge>> edges;
 		HashMap<String,Double> bestCost;
+
 		
 		Graph(){
 			cities = new HashMap<>();
 			edges = new HashMap<>();
 			bestCost = new HashMap<>();
 		}
-		
+		/***
+		 * Adds a city to our hashmap and initializes other hash maps
+		 * @param cityName Key for Hash
+		 * @param lat Lattitude of City
+		 * @param lon Longitude of City
+		 */
 		private void addCity(String cityName, double lat, double lon) {
 			cities.put(cityName, new City(cityName,lat,lon));
 			edges.put(cityName, new LinkedList<>());
 			bestCost.put(cityName,Double.MAX_VALUE);
 		}
 		
+		/***
+		 * Adds an edge to our edge set
+		 * @param startCity Key for starting city
+		 * @param endCity Key for ending city
+		 * @param distanceApart How far away the two cities are (in miles)
+		 */
 		private void addEdge(String startCity, String endCity, double distanceApart) {
 			City start = cities.get(startCity);
 			City end = cities.get(endCity);
@@ -239,7 +306,10 @@ public class AStar extends Pathfinder{
 			this.lat = lat;
 			this.lon = lon;
 		}
-		
+		/***
+		 * Creates a copy of the city to put in our frontier
+		 * @return Copy of city node
+		 */
 		private City copy() {
 			return new City(name,lat,lon,cost,actualCost);
 		}
