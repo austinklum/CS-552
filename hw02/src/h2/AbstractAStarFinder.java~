@@ -1,0 +1,9 @@
+
+public class AbstractAStarFinder
+    extends AStarSearcher<State,
+                  Node extends SearchTreeNode<Node,State> & KnowsOwnCost,
+                               Frontier extends Frontiers.PriorityQueue<Node>> {
+  AbstractAStarFinder( heuristic) {
+    super();
+  }
+}
