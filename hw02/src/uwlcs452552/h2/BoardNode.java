@@ -8,13 +8,34 @@ import uwlcs452552.h2.model.BoardState;
 import uwlcs452552.h2.model.Move;
 import uwlcs452552.h2.model.PlacedCar;
 
+/**
+ *  Search tree node for building RushHour solution move sequences.
+ */
 public class BoardNode
     implements SearchTreeNode<BoardNode,BoardState>, KnowsOwnCost {
   private final double cost;
   private final BoardState board;
   private final Move move;
   private final BoardNode parent;
-  public BoardNode(BoardState board, Move move) { this(0,board,move,null); }
+
+  /**
+   * Convenience constructor for a root tree node.  The parent is
+   * taken to be <tt>null</tt>, the last move is {@link Move#NONE
+   * NONE}, and the sunk cost is zero.
+   *  @param board {@link BoardState} associated with this tree node
+   */
+  public BoardNode(BoardState board) {
+    this(0, board, Move.NONE, null);
+  }
+
+  /**
+   * Primary constructor.
+   *  @param cost  Sunk cost for reaching this state from the root
+   *  @param board {@link BoardState} associated with this tree node
+   *  @param move {@link Move} used to arrive in this state from the
+   *  parent tree's state
+   *  @param parent Parent node in the search tree
+   */
   public BoardNode(double cost, BoardState board, Move move,
                    BoardNode parent) {
     this.cost = cost;
@@ -22,6 +43,7 @@ public class BoardNode
     this.board = board;
     this.parent = parent;
   }
+
   @Override public double getCost() { return cost; }
   @Override public BoardState getState() { return board; }
   public boolean hasGoalState() { return board.isGoalState(); }

@@ -13,7 +13,6 @@ import uwlcs452552.search.graph.ExploredSets;
 import uwlcs452552.h2.model.BoardState;
 import uwlcs452552.h2.model.Move;
 import uwlcs452552.h2.model.PlacedCar;
-import static uwlcs452552.h2.model.Move.NONE;
 
 /**
  *  Model solution finder for RushHour boards using breadth-first
@@ -26,7 +25,7 @@ public class BreadthFirstFinder
   public BreadthFirstFinder() {
     super(() -> GoalCheckers.firstGoal((BoardNode cn) -> cn.hasGoalState()),
           ExploredSets.trackGeneratedByArtifactHashSet((n) -> n.getState().boardString()),
-          (BoardState board) -> new BoardNode(board,NONE));
+          (BoardState board) -> new BoardNode(board));
     // setDebug(true);
   }
 

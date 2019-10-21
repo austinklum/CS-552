@@ -10,4 +10,12 @@ public class ZeroHeuristic extends MovesFinder {
   public ZeroHeuristic() {
     super((b) -> 0.0);
   }
+
+  /**
+   *  Note that if we override toString() with a nice and distinct
+   *  name, it will help the output of {@link AbstractSolution#run} to
+   *  be a bit more readable.
+   */
+  @Override
+  public String toString() { return "Zero function"; }
 }

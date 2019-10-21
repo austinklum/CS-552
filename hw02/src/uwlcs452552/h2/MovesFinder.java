@@ -13,8 +13,16 @@ import uwlcs452552.search.graph.Frontiers;
 import uwlcs452552.h2.model.BoardState;
 import uwlcs452552.h2.model.Move;
 import uwlcs452552.h2.model.PlacedCar;
-import static uwlcs452552.h2.model.Move.NONE;
 
+/**
+ *  Superclass for the various A* approaches to be tested in this
+ *  homework.  The constructor takes the heuristic function, and plugs
+ *  it into the general A* framework.
+ *
+ *  Note that if we override {@link Object#toString toString} in the
+ *  concrete subclasses with nice and distinct names, it will help the
+ *  output of {@link AbstractSolution#run} to be a bit more readable.
+ */
 public class MovesFinder extends AStarSearcher<BoardState,BoardNode>
     implements Runners {
 
@@ -23,7 +31,7 @@ public class MovesFinder extends AStarSearcher<BoardState,BoardNode>
           (BoardNode node) -> heuristic.apply(node.getState()),
           ExploredSets.trackGeneratedByArtifactHashSet
               ((node) -> node.getState().boardString()),
-          (BoardState board) -> new BoardNode(board,NONE));
+          (BoardState board) -> new BoardNode(board));
     // setDebug(true);
   }
 }
