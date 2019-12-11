@@ -1,0 +1,97 @@
+/**
+ * Tsuro agent framework
+ *
+ * <p>Some starting points for exploring this code:</p>
+ *
+ * <ol>
+ * <li>
+ *   The interfaces {@link uwlcs452552.h5.Agent} and
+ *   {@link uwlcs452552.h5.AgentFactory} are what you will
+ *   implement.
+ * </li>
+ * <li>
+ *   Class {@link uwlcs452552.h5.Board} represents the state of a
+ *   game.  An instance of this class is provided when your agent is
+ *   asked for its next move.
+ * </li>
+ * <li>
+ *   Class {@link uwlcs452552.h5.Tile} represents one playing tile.
+ *   An instance of this class is provided when your agent is
+ *   given a replacement for a played tile.
+ * </li>
+ * <li>
+ *   Package {@link uwlcs452552.search.graph} is a generic
+ *   implementation of several of the graph search algorithms we have
+ *   discussed.
+ *   <ul>
+ *   <li>
+ *     The heart of this implementation is class
+ *     {@link uwlcs452552.search.graph.GraphSearcher GraphSearcher},
+ *     which implements the <b>Graph-Search</b> algorithm of Russell
+ *     and Norvig in its general form.  The specific behaviors of the
+ *     frontier, the explored set, checking for goal nodes, etc. are
+ *     provided through the generic type arguments, and through the
+ *     behaviors passed as constructor arguments.
+ *   </li>
+ *   <li>
+ *     You will make particular (if indirect) use of class
+ *     {@link uwlcs452552.search.graph.AStarSearcher AStarSearcher},
+ *     which specializes
+ *     {@link uwlcs452552.search.graph.GraphSearcher GraphSearcher}
+ *     with the priority queue details of A* search.
+ *   </li>
+ *   </ul>
+ * </li>
+ * <li>
+ *   Package {@link uwlcs452552.h2} links the generic search
+ *   implementations with the Rushhour model.
+ *   <ul>
+ *   <li>
+ *     Class {@link uwlcs452552.h2.BreadthFirstFinder} solves
+ *     Rushhour puzzles using breadth-first search.  This class is your
+ *     frenemy: On the one hand, this class gives you a working example
+ *     of how we specialize the general search algorithms to a
+ *     particular problem.  But on the other hand this class is your
+ *     rival, since the entire point of designing good heuristics with
+ *     A* is to \emph{beat blind search algorithms like BFS}.
+ *   </li>
+ *   <li>
+ *     For each heuristic function you implement, you will write
+ *     one class extending {@link uwlcs452552.h2.MovesFinder}.  Note
+ *     the series of {@link uwlcs452552.h2.MovesFinder MovesFinder}'s
+ *     superclasses: they include the A* implementation of
+ *     {@link uwlcs452552.search.graph.AStarSearcher AStarSearcher},
+ *     so extensions of {@link uwlcs452552.h2.MovesFinder MovesFinder}
+ *     all use A* search.  Note also that the constructor for
+ *     {@link uwlcs452552.h2.MovesFinder MovesFinder} takes only one
+ *     argument --- the heuristic function.  So
+ *     {@link uwlcs452552.h2.MovesFinder MovesFinder}
+ *     applies the heuristic given in its constructor to A*.  Your
+ *     subclasses should provide that constructor argument, and nothing
+ *     more: do not otherwise override any methods inherited from
+ *     {@link uwlcs452552.h2.MovesFinder MovesFinder} in your final
+ *     submission.  (Overriding the various debugging functions as you
+ *     develop and debug is fine, but silence this output for your
+ *     actual submission.)
+ *   </li>
+ *   <li>
+ *     Finally, you will extend class
+ *     {@link uwlcs452552.h2.AbstractSolution} to wrap up all of your
+ *     work on one bundle.
+ *
+ *     The {@link uwlcs452552.h2.AbstractSolution#run run} method of
+ *     this class is suitable for calling
+ *     from the <tt>main</tt> method of your concrete
+ *     <tt>h2.Solution</tt> class, such as with
+ *     <pre>  new Solution().run();</pre>
+ *     The given version will apply all of your solvers, plus BFS, to
+ *     all of the sample boards, and print the results as a table.  Of
+ *     course you are free to override or edit this method locally to
+ *     print additional calculations useful for your analysis of the
+ *     effective branching factor.
+ *   </li>
+ *   </ul>
+ * </li>
+ * </ol>
+ */
+package uwlcs452552.h2;

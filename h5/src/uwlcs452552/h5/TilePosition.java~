@@ -1,0 +1,31 @@
+// TilePosition.java
+//
+// 2019, for CS452/552, JPH Maraist
+package uwlcs452552.h5;
+
+/**
+ * Record class for communicating a position in the grid.
+ */
+public class TilePosition {
+  private final int x, y;
+
+  /**
+   * Sole constructor, assembling the move record.
+   */
+  public TilePosition(int x, int y) {
+    this.x = x;
+    this.y = y;
+  }
+
+  /**
+   * Accessor for the tile to be placed.
+   */
+  public Tile getTile() { return tile; }
+
+  /**
+   * Accessor for the number of clockwise turns made to the tile when
+   * placing it.
+   */
+  public int getRotation() { return rotation; }
+}
+

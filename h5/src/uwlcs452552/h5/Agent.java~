@@ -1,0 +1,19 @@
+// Agent.java
+//
+// 2019, for CS452/552, JPH Maraist
+//
+// Interface for a Tsuro-playing agent
+
+package uwlcs452552.h5;
+
+public interface Agent {
+  /**
+   * Return a new game-playing agent.
+   * @param boardSize The number of tile slots along any side of the
+   * game board.
+   * @param id A unique identifier assigned by the game controller to
+   * this agent.
+   */
+  public Move play(Board board, History history);
+}
+

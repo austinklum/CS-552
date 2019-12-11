@@ -1,0 +1,37 @@
+// Util.java
+//
+// 2019, for CS452/552, JPH Maraist
+package uwlcs452552.h5;
+
+/** Miscellaneous utilities. */
+public final class Util {
+  public static <A> void randomizeArray(Random rand, A[] arr) {
+    final int len = arr.length;
+    final int[] sorter = new int[len];
+    for(int i=0; i<len; i++) {
+      sorter[i] = rand.nextInt();
+    }
+
+    // Selection sort both arrays according to the sorter
+    for(int i=0; i<len-1; i++) {
+      int leastVal=sorter[i], leastIndex=i;
+      for(int j=1; j<len; j++) {
+        int thisVal=sorter[j];
+        if (thisVal<leastVal) {
+          leastVal=thisVal;
+          leastIndex=j;
+        }
+        if (leastIndex>i) {
+          final int tmp = sorter[i];
+          sorter[i] = leastVal;
+          sorter[leastIndex] = tmp;
+
+          final A tmpA = arr[i];
+          arr[i] = arr[leastIndex];
+          arr[leastIndex] = tmpA;
+        }
+      }
+    }
+  }
+}
+

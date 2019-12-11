@@ -1,0 +1,36 @@
+// Tile.java
+//
+// 2019, for CS452/552, JPH Maraist
+
+package uwlcs452552.h5;
+
+/**
+ * Individual Tsuro playing tiles.
+ */
+public class Move {
+  private final Tile tile;
+  private final int rotation;
+
+  /**
+   * Sole constructor, assembling the move record.
+   * @param tile The tile to be placed.
+   * @param rotation The number of clockwise turns made to the tile
+   * when placing it.  This value should be between 0 and 3, inclusively
+   */
+  public Move(Tile tile, int rotation) {
+    this.tile = tile;
+    this.rotation = rotation;
+  }
+
+  /**
+   * Accessor for the tile to be placed.
+   */
+  public Tile getTile() { return tile; }
+
+  /**
+   * Accessor for the number of clockwise turns made to the tile when
+   * placing it.
+   */
+  public int getRotation() { return rotation; }
+}
+

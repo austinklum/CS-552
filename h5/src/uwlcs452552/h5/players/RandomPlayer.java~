@@ -1,0 +1,10 @@
+// RandomAgent.java
+//
+// 2019, for CS452/552, JPH Maraist
+package uwlcs452552.h5.controller;
+import java.io.IOException;
+import java.io.FileWriter;
+import java.io.BufferedWriter;
+import java.io.PrintWriter;
+import uwlcs452552.h5.Board;
+import uwlcs452552.h5.Render;

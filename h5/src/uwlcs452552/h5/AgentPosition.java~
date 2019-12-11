@@ -1,0 +1,26 @@
+// AgentPosition.java
+//
+// 2019, for CS452/552, JPH Maraist
+package uwlcs452552.h5;
+
+/**
+ * Record class for an agent's position on the board.
+ */
+public class AgentPosition extends TilePosition {
+  private final int x, y;
+
+  /**
+   * Sole constructor, assembling the move record.
+   */
+  public TilePosition(int x, int y) {
+    this.x = x;
+    this.y = y;
+  }
+
+  /** Index of the row */
+  public int x() { return x; }
+
+  /** Index of the column */
+  public int y() { return y; }
+}
+

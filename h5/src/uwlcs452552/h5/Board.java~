@@ -1,0 +1,38 @@
+// Board.java
+//
+// 2019, for CS452/552, JPH Maraist
+package uwlcs452552.h5;
+
+/**
+ * The state of the game at some point in play.
+ */
+public class History {
+  private int count=0;
+  private final ArrayList<Object> players = new ArrayList<>();
+  private final ArrayList<Move> moves = new ArrayList<>();
+
+  /**
+   * Return the number of moves so far.
+   */
+  public int moves() { return moves; }
+
+  /**
+   * Return the ID of the player taking action in a particular turn.
+   */
+  public Object player(int turn) { return players.get(turn); }
+
+  /**
+   * Return the move made in a particular turn.
+   */
+  public Move move(int turn) { return moves.get(turn); }
+
+  /**
+   * Package-private method for logging a new turn.
+   */
+  void recordMove(Object player, Move move) {
+    players.set(count, player);
+    moves.set(count, move);
+    count++;
+  }
+}
+
