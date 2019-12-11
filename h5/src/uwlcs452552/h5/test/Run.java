@@ -5,6 +5,8 @@ package uwlcs452552.h5.test;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Random;
+
+import h5.klum.Factory;
 import uwlcs452552.h5.AgentFactory;
 import uwlcs452552.h5.Move;
 import uwlcs452552.h5.Tile;
@@ -28,8 +30,8 @@ public final class Run {
 
   public static void main(String[] argv) throws IOException {
     // tileTest();
-     randosTest();
-    // randosTourney();
+     //randosTest();
+     randosTourney();
     //randosTourney2();
     // testSlowPlay();
     // testSlowDraw();
@@ -61,23 +63,23 @@ public final class Run {
    *  single game
    */
   public static void randosTourney() throws IOException {
-    final SingleTournament tourney = new SingleTournament("Test tournament", 3);
-    final Object[] ids = new Object[] { "Alpha", "Beta", "Gamma", "Delta" };
+    final SingleTournament tourney = new SingleTournament("Test tournament", 100);
+    final Object[] ids = new Object[] { "Klum", "Beta", "Gamma", "Delta" };
     tourney.go(new AgentFactory[] {
-        RandomAvoidLoss.FACTORY, RandomAvoidLoss.FACTORY,
+    	new Factory(), RandomAvoidLoss.FACTORY,
         RandomAvoidLoss.FACTORY, RandomAvoidLoss.FACTORY
       },
-      ids, new Random(), Logs.latexGameLog("test.tex"));
+      ids, new Random(), Logs.latexTournamentLog("testKlum.tex"));
   }
 
   /**
    *  Have some random-acting agents play a game
    */
   public static void randosTest() throws IOException {
-    final Log log = Logs.latexGameLog("test.tex");
+    final Log log = Logs.latexGameLog("testKlum.tex");
     final SingleGame
         game = new SingleGame(new AgentFactory[] {
-            RandomAvoidLoss.FACTORY, RandomAvoidLoss.FACTORY,
+            new Factory(), RandomAvoidLoss.FACTORY,
             RandomAvoidLoss.FACTORY, RandomAvoidLoss.FACTORY
           }, log);
     game.go(log);
