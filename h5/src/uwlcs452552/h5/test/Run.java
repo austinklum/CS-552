@@ -2,6 +2,7 @@
 //
 // 2019, for CS452/552, JPH Maraist
 package uwlcs452552.h5.test;
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Random;
@@ -9,19 +10,17 @@ import java.util.Random;
 import h5.klum.Factory;
 import uwlcs452552.h5.AgentFactory;
 import uwlcs452552.h5.Move;
+import uwlcs452552.h5.Render;
 import uwlcs452552.h5.Tile;
 import uwlcs452552.h5.Tiles;
-import uwlcs452552.h5.Render;
-import uwlcs452552.h5.players.PureRandomAgent;
-import uwlcs452552.h5.players.RandomAvoidLoss;
-import uwlcs452552.h5.players.Defective;
 import uwlcs452552.h5.controller.CompoundTournament;
 import uwlcs452552.h5.controller.Log;
 import uwlcs452552.h5.controller.Logs;
 import uwlcs452552.h5.controller.SingleGame;
 import uwlcs452552.h5.controller.SingleTournament;
-import uwlcs452552.h5.controller.Scoreboard;
 import uwlcs452552.h5.controller.Tournament;
+import uwlcs452552.h5.players.Defective;
+import uwlcs452552.h5.players.RandomAvoidLoss;
 
 /**
  * Static method for generating individual grid tiles.
@@ -31,14 +30,45 @@ public final class Run {
   public static void main(String[] argv) throws IOException {
     // tileTest();
      //randosTest();
-     randosTourney();
+     //randosTourney();
     //randosTourney2();
     // testSlowPlay();
     // testSlowDraw();
     // testSlowInit();
+	myTourney(false,1000);
     System.exit(0);
   }
 
+  /**
+   *  Random-acting agents playing a tournament with repetitions of a
+   *  single game
+   */
+  public static void myTourney(boolean full, int games) throws IOException {
+	String fileName = "testKlum.tex";
+    final SingleTournament tourney = new SingleTournament("Test tournament", games);
+    final Object[] ids = new Object[] { "Klum", "Beta", "Gamma", "Delta" };
+    Log log = null;
+    if(full) {
+    	log = Logs.latexGameLog(fileName);
+    } else {
+    	log = Logs.latexTournamentLog(fileName);
+    }
+    tourney.go(new AgentFactory[] {
+    	new Factory(), RandomAvoidLoss.FACTORY,
+        RandomAvoidLoss.FACTORY, RandomAvoidLoss.FACTORY
+      }, 
+      ids,
+      new Random(),
+      log
+    );
+   // autoCompileLog();
+  }
+
+  private static void autoCompileLog() throws IOException {
+	  Runtime.getRuntime().exec("pdfLatex");
+	  Runtime.getRuntime().exec("testKlum.pdf");
+  }
+  
   // TODO Add a tournament type which samples the n-choose-m subsets of
   // the whole population
 
@@ -63,13 +93,13 @@ public final class Run {
    *  single game
    */
   public static void randosTourney() throws IOException {
-    final SingleTournament tourney = new SingleTournament("Test tournament", 100);
+    final SingleTournament tourney = new SingleTournament("Test tournament", 1);
     final Object[] ids = new Object[] { "Klum", "Beta", "Gamma", "Delta" };
     tourney.go(new AgentFactory[] {
     	new Factory(), RandomAvoidLoss.FACTORY,
         RandomAvoidLoss.FACTORY, RandomAvoidLoss.FACTORY
       },
-      ids, new Random(), Logs.latexTournamentLog("testKlum.tex"));
+      ids, new Random(), Logs.latexGameLog("testKlum.tex"));
   }
 
   /**
