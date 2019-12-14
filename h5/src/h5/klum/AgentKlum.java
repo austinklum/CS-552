@@ -19,6 +19,7 @@ import java.util.concurrent.TimeUnit;
 
 import uwlcs452552.h5.Agent;
 import uwlcs452552.h5.AgentFactory;
+import uwlcs452552.h5.AgentPosition;
 import uwlcs452552.h5.Board;
 import uwlcs452552.h5.GameEvent;
 import uwlcs452552.h5.History;
@@ -208,11 +209,14 @@ public class AgentKlum implements Agent {
 	    	Board nextBoard = board.apply(move);
 	    	if(!filterOut(board, nextBoard, history, move)) { 
 	    		
+	    		/* Create a new hand and create the modifer for how much faith we have in our guesses*/
 	    		LinkedList<Tile> temp = newHand(myHand, move);
 	    		double modifer = lookAheadUtilityModifer(col, row, nextBoard);
 	    		
+	    		/* Utility is an important part of maximization */
 	    		double utility = (minimax(nextBoard,history, temp, depth-1)*modifer) + evaluateUtility(move, board, nextBoard);
 	    	
+	    		/* Just the best move based on utility */
 	    		if(bestUtility < utility) {
 	    			bestUtility = utility;
 	    			bestChoice = move;
@@ -302,13 +306,36 @@ private double lookAheadUtilityModifer(final int col, final int row, Board nextB
 		//value += weightOptions(move, nextBoard);
 		value += killOthers(move, board, nextBoard);
 		value += avoidAdjecentPlayers(move,nextBoard);
-		value += guessOpponentMove(move,nextBoard);
+		value += guessOpponentCloser(move,nextBoard);
 		return value;
 	}
 
-	private double guessOpponentMove(Move move, Board nextBoard) {
+	/** Should use probability to guess wether the closest opponent is getting closer.*/
+	private double guessOpponentCloser(Move myMove, Board nextBoard) {
+		if(possibleMoves.size() > 100) {
+			return 0; // too much to process!
+		}
 		
-		return 0;
+		final TilePosition mySpot = nextBoard.nextPlaySlot();
+	    final int myCol = mySpot.col(),
+	    		  myRow = mySpot.row();
+		double shortestDist = Double.MAX_VALUE;
+		Object closestAgent = null;
+		for(Object agent : nextBoard.getAgentIDs()) {
+			final TilePosition spot = nextBoard.getAgentPosition(agent);
+		    final int col = spot.col(), row = spot.row();
+		    
+		    double dist = Math.sqrt(Math.pow((row - myRow),2)+Math.pow((col - myCol),2));
+		    if(dist < shortestDist) {
+		    	shortestDist = dist;
+		    	closestAgent = agent;
+		    }
+		}
+		    
+		final AgentPosition spot = nextBoard.getAgentPosition(closestAgent);
+		final TilePosition spotNext = spot.getOppositeTilePosition();
+
+		return (Math.abs(mySpot.col() - spotNext.col()) + Math.abs(mySpot.row() - spotNext.row())) * -.005;
 	}
 
 
