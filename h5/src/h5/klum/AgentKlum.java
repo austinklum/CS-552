@@ -85,15 +85,15 @@ public class AgentKlum implements Agent {
 		} 
 		
 		if(bestMove == null) {
-			System.out.println("defaulted bestMove to first thing I could find!");
+			//System.out.println("defaulted bestMove to first thing I could find!");
 			final TilePosition spot = board.nextPlaySlot();
 			final int col=spot.col(), row=spot.row();
-			System.out.println("@ (" + row + "," + col + ")");
+
 			defaultedMove = new Move(row, col, hand.getFirst(), 0);
 			hand.remove(defaultedMove.getTile());
 			return defaultedMove;
 		} else {
-			System.out.println("Best Move ever!");
+			//System.out.println("Best Move ever!");
 			hand.remove(bestMove.getTile());
 			return bestMove;
 		}
@@ -113,7 +113,7 @@ public class AgentKlum implements Agent {
 	
 	
 	/**
-	 * Adds pertinent information to Agent about tile given with maxDrawSeconds - 1 as time limit
+	 * Adds pertinent information to Agent about tile given with maxDrawSeconds as time limit
 	 * @param tile Tile being received
 	 * @throws InterruptedException 
 	 */
@@ -133,7 +133,7 @@ public class AgentKlum implements Agent {
 	
 	
 	/**
-	 * Creates a timed task to process the deck with maxInitSeconds - 1 as time limit
+	 * Creates a timed task to process the deck with maxInitSeconds as time limit
 	 */
 	private void init() throws InterruptedException {
 		CompletionService<Boolean> service = new ExecutorCompletionService<Boolean>(Executors.newFixedThreadPool(1));
@@ -150,7 +150,7 @@ public class AgentKlum implements Agent {
 	}
 
 	private int timeLimit(int timeInSeconds) {
-		return (timeInSeconds-1)*1000;
+		return timeInSeconds*985;
 	}
 	
 
@@ -171,7 +171,7 @@ public class AgentKlum implements Agent {
 			}
 		});
 		if(service.poll(timeLimit(maxTurnSeconds), TimeUnit.MILLISECONDS) == null) {
-			//System.out.println("decideTurns: Time's up!");
+			System.out.println(" - - - decideTurns: Time's up!");
 			future.cancel(true);
 		}
 	}
@@ -180,7 +180,7 @@ public class AgentKlum implements Agent {
 		final TilePosition spot = board.nextPlaySlot();
 	    final int col = spot.col(),
 	    		  row = spot.row();
-	    rec(board,history,null,myHand,2);
+	    rec(board,history,null,myHand,1);
 		/*
 		HashMap<Move, Board> moves = getFilteredMoves(board, history, myHand);
 	    HashMap<Double, Move> utilityToMove = getUtilityToMove(board, moves, 0);
@@ -288,7 +288,19 @@ public class AgentKlum implements Agent {
 	    				temp.add(tile);
 	    			}
 	    		}
-	    		double utility = rec(nextBoard,history,move, temp, depth-1) + evaluateUtility(move, board, nextBoard);
+	    		double multipler = .5;
+	    		java.util.List<Object> agents = nextBoard.getAgentIDs();
+	    	    agents.remove(id);
+	    		for(Object agent : agents) {
+	    			TilePosition agentsSpot = nextBoard.getAgentPosition(agent).getOppositeTilePosition();
+	    			if(agentsSpot.col() == col && agentsSpot.row() == row) {
+	    				multipler /= 4;
+	    			}
+	    		}
+	    		
+	    		double utility = (rec(nextBoard,history,move, temp, depth-1)*multipler) + evaluateUtility(move, board, nextBoard);
+	    	
+
 	    		if(bestUtility < utility) {
 	    			bestUtility = utility;
 	    			bestChoice = move;
@@ -360,12 +372,13 @@ public class AgentKlum implements Agent {
 	private double evaluateUtility( final Move move, Board board, Board nextBoard) {
 		double value = 0;
 		//value += weightEdges(move, nextBoard);
-		//value += killOthers(move, board, nextBoard);
 		//value += weightOptions(move, nextBoard);
+		value += killOthers(move, board, nextBoard);
 		value += avoidAdjecentPlayers(move,nextBoard);
 		return value;
 	}
 
+	/**A move is penalized if it decides to play a move that will bring it next to another player*/
 	private double avoidAdjecentPlayers(Move move, Board nextBoard) {
 		java.util.List<Object> agents = nextBoard.getAgentIDs();
 		double value = 0;
@@ -376,29 +389,32 @@ public class AgentKlum implements Agent {
 		for(Object agent : agents) {
 			TilePosition agentsSpot = nextBoard.getAgentPosition(agent).getOppositeTilePosition();
 			if(agentsSpot.col() == col && agentsSpot.row() == row) {
-				value -= 10;
-				//System.out.println("AHH, " + agent + " is at (" + row  + ":" + agentsSpot.row() + "," + col + ":" + agentsSpot.col());
+				value -= 5;
 			}
 		}
 		return value;
 	}
 	
+	/** Searches standard deck at next play slot and determines how many tiles will not lead to death*/
 	private double weightOptions(Move move, Board nextBoard) {
 		double options = 0;
+		
 		Tile[] tiles = Tiles.standardTileSet();
 		final TilePosition spot = nextBoard.nextPlaySlot();
 	    final int col = spot.col(),
 	    		  row = spot.row();
+
 		for(Tile tile : tiles) {
 			for(int i = 0; i < 4; i++) {
-				if(nextBoard.apply(new Move(row,col,tile,i)).isInGame(id)) {
+				if(move.getTile().getId() != tile.getId() && nextBoard.apply(new Move(row,col,tile,i)).isInGame(id)) {
 					options++;
 				}
 			}
 		}
-		return options * 1.25;
+		return options * 2;
 	}
 	
+	/**Give extra value for staying around outside edge. */
 	private double weightEdges(Move move, Board nextBoard) {
 		double colWeight = Math.abs(nextBoard.getAgentPosition(id).col() - boardSize/2);
 		double rowWeight = Math.abs(nextBoard.getAgentPosition(id).row() - boardSize/2);
@@ -413,6 +429,7 @@ public class AgentKlum implements Agent {
 		
 	}
 	
+	/**Heavily reward killing other players, provided it doesn't put you in harm*/
 	private double killOthers(Move move, Board board, Board nextBoard) {
 		if(nextBoard.getActiveAgentCount() < board.getActiveAgentCount()) {
 			return 10;
@@ -420,6 +437,7 @@ public class AgentKlum implements Agent {
 		return 0;
 	}
 	
+	/**Removes moves that are nonsensible*/
 	private boolean filterOut(Board board, Board nextBoard, History history, Move move) {
 		if (!nextBoard.isInGame(id)) return true;
 		// if(isSymmetricToOtherMoves) return false;
@@ -429,7 +447,7 @@ public class AgentKlum implements Agent {
 	/**
 	 * Adds pertinent information to Agent about tile given
 	 * 
-	 * Creates all possible moves O(4*boardSize^2)
+	 * Creates all possible moves 
 	 * */
 	private void processTile(Tile tile) {
 		// Create a HashMap by position to all possible moves at that position filtered by tile.
@@ -452,10 +470,12 @@ public class AgentKlum implements Agent {
 		 }
 	}
 	
+	/**Returns a string 'row,col'*/
 	private String getPositionHash(int row, int col) {
 		return row + "," + col;
 	}
 	
+	/**Look at my tiles in my hand for possible moves. This is a subproblem of deciding what my agent should do*/
 	private LinkedList<Move> getMovesInHand(int row, int col, LinkedList<Tile> myHand){
 		LinkedList<Move> moves = new LinkedList<>();
 		for (Tile tile : myHand) {
@@ -464,6 +484,7 @@ public class AgentKlum implements Agent {
 		return moves;
 	}
 	
+	/**Does nothing other than make sure the move the agent will play will knowinlgy */
 	private void randomAvoidLoss(Board board, History history) {
 	    final int tileCount = hand.size();
 	    if (tileCount == 0) {
@@ -505,16 +526,5 @@ public class AgentKlum implements Agent {
 			processTilesCount++;
 		}
 	}
-
-
-
-	
-	  public static final AgentFactory FACTORY = new AgentFactory() {
-	      public Agent getAgent(int boardSize, Tile[] deck, int maxInitSeconds,
-	                            int maxDrawSeconds, int maxTurnSeconds,
-	                            Object id) {
-	        return new AgentKlum(boardSize, deck, maxInitSeconds, maxDrawSeconds, maxTurnSeconds, id);
-	      }
-	    };
 	
 }
