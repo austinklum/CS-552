@@ -5,7 +5,6 @@ import uwlcs452552.h5.AgentFactory;
 import uwlcs452552.h5.Tile;
 
 public class Factory implements AgentFactory {
-	
 	public Factory() { }
 	
 	@Override

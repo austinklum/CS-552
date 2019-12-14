@@ -2,6 +2,7 @@ package h5.klum;
 
 import static uwlcs452552.h5.Util.randomizeArray;
 
+import java.awt.List;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -23,9 +24,11 @@ import uwlcs452552.h5.History;
 import uwlcs452552.h5.Move;
 import uwlcs452552.h5.Tile;
 import uwlcs452552.h5.TilePosition;
+import uwlcs452552.h5.Tiles;
 
 public class AgentKlum implements Agent {
 	
+	private static final int MAX_DEPTH = 2;
 	private final int boardSize;
 	private final Tile[] initDeck;
 	private final int maxInitSeconds;
@@ -48,7 +51,7 @@ public class AgentKlum implements Agent {
 		private LinkedList<Move> plan;
 		private boolean failedInit;
 	*/
-	
+
 	public AgentKlum(int boardSize, Tile[] deck, int maxInitSeconds, int maxDrawSeconds, int maxTurnSeconds, Object id) {
 		
 		this.boardSize = boardSize;
@@ -85,6 +88,7 @@ public class AgentKlum implements Agent {
 			System.out.println("defaulted bestMove to first thing I could find!");
 			final TilePosition spot = board.nextPlaySlot();
 			final int col=spot.col(), row=spot.row();
+			System.out.println("@ (" + row + "," + col + ")");
 			defaultedMove = new Move(row, col, hand.getFirst(), 0);
 			hand.remove(defaultedMove.getTile());
 			return defaultedMove;
@@ -162,6 +166,7 @@ public class AgentKlum implements Agent {
 			@Override
 			public Boolean call() throws Exception {
 				minimax(board, history, hand);
+				//randomAvoidLoss(board,history);
 				return true;
 			}
 		});
@@ -175,13 +180,15 @@ public class AgentKlum implements Agent {
 		final TilePosition spot = board.nextPlaySlot();
 	    final int col = spot.col(),
 	    		  row = spot.row();
-		
+	    rec(board,history,null,myHand,2);
+		/*
 		HashMap<Move, Board> moves = getFilteredMoves(board, history, myHand);
 	    HashMap<Double, Move> utilityToMove = getUtilityToMove(board, moves, 0);
 	    double bestUtil = getBestUtility(utilityToMove);
 	    
 	    // Get the position => get tile by ID => get move in linked list by rotation
 	    bestMove = possibleMoves.get(getPositionHash(row,col)).get(utilityToMove.get(bestUtil).getTile().getId()).get(utilityToMove.get(bestUtil).getRotation());
+	    
 	    
 
 	    Tile bestTile = myHand.get(myHand.indexOf(bestMove.getTile()));
@@ -201,9 +208,96 @@ public class AgentKlum implements Agent {
 		// Look at best move for each level
 		// Keep going forward until out of tiles
 		// remvove what we think is the bestMove from our hand
+	    int iterCount = 2;
+	    if(hand.size() < 2) {
+	    	iterCount = hand.size();
+	    }
+	    LinkedList<Tile> removedTiles = new LinkedList<>();
+	    // List of size hand.size();
+	    // follow path to depth 3
+	    // add total utility to the parent tile
+	    //Generate all board states for next 3 tiles
+	    */
+	    /*
+	    for(int i = MAX_DEPTH; i > 0; i--) {
+	    	// Generate all move paths
+	    	for(Move move : getMovesInHand(row,col,myHand)) {
+	    		Board nextBoard = board.apply(move);
+	    		if(filterOut(board, nextBoard, history, move)) {
+	    			break;
+	    		}
+	    		evaluateUtility(move, board, nextBoard);
+	    	}
+	    }
 	    
+		
+		HashMap<Move, Board> moves = getFilteredMoves(board, history, myHand);
+//	    HashMap<Double, Move> utilityToMove = getUtilityToMove(board, moves, 0);
+
+		for(Move move : moves.keySet()) {
+			Board nextBoard = board.apply(move);
+			
+		}
+		
+	    for(final Move move : getMovesInHand(row, col, myHand)) {
+	    	Board nextBoard = board.apply(move);
+	    	if(!filterOut(board, nextBoard, history, move)) {
+	    		moves.put(move, nextBoard);
+	    	}
+	    }
+	    if(moves.isEmpty()) {
+	    	Move defaultMove = new Move(row, col, hand.getFirst(), 0);
+	    	moves.put(defaultMove, board.apply(defaultMove));
+	    }
+	    
+	   double bestUtility = -1;
+	   //double utility = -1;
+	   Move move = null;
+	    for(final Move myMove : getMovesInHand(row,col,myHand)) {
+			double utility = rec(board, history, myMove, myHand, MAX_DEPTH);
+			
+			if(bestUtility < utility) {
+				bestUtility = utility;
+				bestMove = move;
+			}
+			
+	    } 
+	
+	    */
 	}
 
+	
+	private double rec(Board board, History history, Move myMove, LinkedList<Tile> myHand, int depth) {
+		
+		if (depth == 0) {
+			return 1;
+		}
+		
+		final TilePosition spot = board.nextPlaySlot();
+	    final int col = spot.col(),
+	    		  row = spot.row();
+		
+	    double bestUtility = Double.MIN_VALUE;
+	    Move bestChoice = null;
+		for(final Move move : getMovesInHand(row, col, myHand)) {
+	    	Board nextBoard = board.apply(move);
+	    	if(!filterOut(board, nextBoard, history, move)) { 
+	    		LinkedList<Tile> temp = new LinkedList<>();
+	    		for(Tile tile : myHand) {
+	    			if (tile.getId() != move.getTile().getId()) {
+	    				temp.add(tile);
+	    			}
+	    		}
+	    		double utility = rec(nextBoard,history,move, temp, depth-1) + evaluateUtility(move, board, nextBoard);
+	    		if(bestUtility < utility) {
+	    			bestUtility = utility;
+	    			bestChoice = move;
+	    		}
+	    	}
+	    }
+		bestMove = bestChoice;
+		return bestUtility;
+	}
 
 
 	private double getBestUtility(HashMap<Double, Move> utilityToMove) {
@@ -216,20 +310,20 @@ public class AgentKlum implements Agent {
 		return bestUtil;
 	}
 	
-	private LinkedList<Move> minimaxRec(Board board, History history, LinkedList<Tile> myHand, double utilitySoFar, LinkedList<Move> moveSequence) {
-		if(myHand.isEmpty()) { return null; }
-		LinkedList<Move> list = new LinkedList<>();
-		//list.addAll(minimaxRec)
-		list.add(bestMove);
-		return (minimaxRec(board, history, myHand, utilitySoFar, moveSequence));
-		
-		HashMap<Move, Board> moves = getFilteredMoves(board, history, myHand);
-	    HashMap<Double, Move> utilityToMove = getUtilityToMove(board, moves, utilitySoFar);
-	    
-	    double bestUtil = getBestUtility(utilityToMove);
-		
-		return 0;
-	}
+//	private LinkedList<Move> minimaxRec(Board board, History history, LinkedList<Tile> myHand, double utilitySoFar, LinkedList<Move> moveSequence) {
+//		if(myHand.isEmpty()) { return null; }
+//		LinkedList<Move> list = new LinkedList<>();
+//		//list.addAll(minimaxRec)
+//		list.add(bestMove);
+//		return (minimaxRec(board, history, myHand, utilitySoFar, moveSequence));
+//		
+//		HashMap<Move, Board> moves = getFilteredMoves(board, history, myHand);
+//	    HashMap<Double, Move> utilityToMove = getUtilityToMove(board, moves, utilitySoFar);
+//	    
+//	    double bestUtil = getBestUtility(utilityToMove);
+//		
+//		return 0;
+//	}
 
 
 	/** Gets a HashMap of with key utility and value move */
@@ -252,7 +346,7 @@ public class AgentKlum implements Agent {
 	   
 	    for(final Move move : getMovesInHand(row, col, myHand)) {
 	    	Board nextBoard = board.apply(move);
-	    	if(!filterOut(board, nextBoard, history, move, moves)) {
+	    	if(!filterOut(board, nextBoard, history, move)) {
 	    		moves.put(move, nextBoard);
 	    	}
 	    }
@@ -263,17 +357,48 @@ public class AgentKlum implements Agent {
 		return moves;
 	}
 
-	private void lookAhead() {
-		
-	}
-
 	private double evaluateUtility( final Move move, Board board, Board nextBoard) {
-		double value = -1;
-		value += weightEdges(move, nextBoard);
-		value += killOthers(move, board, nextBoard);
+		double value = 0;
+		//value += weightEdges(move, nextBoard);
+		//value += killOthers(move, board, nextBoard);
+		//value += weightOptions(move, nextBoard);
+		value += avoidAdjecentPlayers(move,nextBoard);
 		return value;
 	}
 
+	private double avoidAdjecentPlayers(Move move, Board nextBoard) {
+		java.util.List<Object> agents = nextBoard.getAgentIDs();
+		double value = 0;
+		TilePosition spot = nextBoard.getAgentPosition(id).getOppositeTilePosition();
+	    final int col = spot.col(),
+	    		  row = spot.row();
+	    agents.remove(id);
+		for(Object agent : agents) {
+			TilePosition agentsSpot = nextBoard.getAgentPosition(agent).getOppositeTilePosition();
+			if(agentsSpot.col() == col && agentsSpot.row() == row) {
+				value -= 10;
+				//System.out.println("AHH, " + agent + " is at (" + row  + ":" + agentsSpot.row() + "," + col + ":" + agentsSpot.col());
+			}
+		}
+		return value;
+	}
+	
+	private double weightOptions(Move move, Board nextBoard) {
+		double options = 0;
+		Tile[] tiles = Tiles.standardTileSet();
+		final TilePosition spot = nextBoard.nextPlaySlot();
+	    final int col = spot.col(),
+	    		  row = spot.row();
+		for(Tile tile : tiles) {
+			for(int i = 0; i < 4; i++) {
+				if(nextBoard.apply(new Move(row,col,tile,i)).isInGame(id)) {
+					options++;
+				}
+			}
+		}
+		return options * 1.25;
+	}
+	
 	private double weightEdges(Move move, Board nextBoard) {
 		double colWeight = Math.abs(nextBoard.getAgentPosition(id).col() - boardSize/2);
 		double rowWeight = Math.abs(nextBoard.getAgentPosition(id).row() - boardSize/2);
@@ -290,12 +415,12 @@ public class AgentKlum implements Agent {
 	
 	private double killOthers(Move move, Board board, Board nextBoard) {
 		if(nextBoard.getActiveAgentCount() < board.getActiveAgentCount()) {
-			return board.getActiveAgentCount() * .75;
+			return 10;
 		}
 		return 0;
 	}
 	
-	private boolean filterOut(Board board, Board nextBoard, History history, Move move, HashMap<Move, Board> moves) {
+	private boolean filterOut(Board board, Board nextBoard, History history, Move move) {
 		if (!nextBoard.isInGame(id)) return true;
 		// if(isSymmetricToOtherMoves) return false;
 		return false;

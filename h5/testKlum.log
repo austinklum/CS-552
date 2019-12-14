@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.20 (MiKTeX 2.9.7250 64-bit) (preloaded format=pdflatex 2019.12.10)  12 DEC 2019 20:26
+This is pdfTeX, Version 3.14159265-2.6-1.40.20 (MiKTeX 2.9.7250 64-bit) (preloaded format=pdflatex 2019.12.10)  14 DEC 2019 07:47
 entering extended mode
 **./testKlum.tex
 (testKlum.tex
@@ -573,25 +573,34 @@ LaTeX Font Info:    Font shape `OMS/cmr/m/n' in size <10> not available
  [1
 
 {C:/Users/Austin Klum/AppData/Local/MiKTeX/2.9/pdftex/config/pdftex.map}] [2] [
-3] [4] [5]
+3] [4]
+Underfull \hbox (badness 5119) in paragraph at lines 1636--1638
+[]\OT1/cmr/m/n/10 Game 809: Gamma, Delta,
+ []
+
+
+Underfull \hbox (badness 5119) in paragraph at lines 1728--1730
+[]\OT1/cmr/m/n/10 Game 855: Gamma, Delta,
+ []
+
+[5]
 LaTeX Font Info:    External font `cmex10' loaded for size
 (Font)              <7> on input line 2023.
 LaTeX Font Info:    External font `cmex10' loaded for size
 (Font)              <5> on input line 2023.
- [6]
-(testKlum.aux) ) 
+ [6] (testKlum.aux) ) 
 Here is how much of TeX's memory you used:
  14095 strings out of 492484
  306834 string characters out of 3131958
- 392026 words of memory out of 3000000
+ 391025 words of memory out of 3000000
  18194 multiletter control sequences out of 15000+200000
  4245 words of font info for 16 fonts, out of 3000000 for 9000
  1141 hyphenation exceptions out of 8191
  60i,6n,83p,408b,273s stack positions out of 5000i,500n,10000p,200000b,50000s
-<D:/Programs/MiTek2.9.7269/fonts/type1/public/amsfonts/cm/cmbx1
-2.pfb><D:/Programs/MiTek2.9.7269/fonts/type1/public/amsfonts/cm/cmr10.pfb><D:/P
-rograms/MiTek2.9.7269/fonts/type1/public/amsfonts/cm/cmsy10.pfb>
-Output written on testKlum.pdf (6 pages, 49086 bytes).
+<D:/Programs/MiTek2.9.7269/fonts/type1/public/amsfonts/cm/
+cmbx12.pfb><D:/Programs/MiTek2.9.7269/fonts/type1/public/amsfonts/cm/cmr10.pfb>
+<D:/Programs/MiTek2.9.7269/fonts/type1/public/amsfonts/cm/cmsy10.pfb>
+Output written on testKlum.pdf (6 pages, 49243 bytes).
 PDF statistics:
  60 PDF objects out of 1000 (max. 8388607)
  0 named destinations out of 1000 (max. 500000)
