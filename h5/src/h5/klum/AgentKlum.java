@@ -20,6 +20,7 @@ import java.util.concurrent.TimeUnit;
 import uwlcs452552.h5.Agent;
 import uwlcs452552.h5.AgentFactory;
 import uwlcs452552.h5.Board;
+import uwlcs452552.h5.GameEvent;
 import uwlcs452552.h5.History;
 import uwlcs452552.h5.Move;
 import uwlcs452552.h5.Tile;
@@ -46,6 +47,7 @@ public class AgentKlum implements Agent {
 	private HashMap<String, HashMap<Integer, LinkedList<Move>>> possibleMoves;
 	
 	private int processTilesCount;
+	private int lastTurn;
 	/* Future Variables?
 		private int whatRound = 1;
 		private LinkedList<Move> plan;
@@ -63,7 +65,7 @@ public class AgentKlum implements Agent {
 		this.id = id;
 		
 		hand = new LinkedList<>();
-		
+		lastTurn = 0;
         try {
 			init();
 		} catch (InterruptedException e) {
@@ -80,9 +82,12 @@ public class AgentKlum implements Agent {
 		bestMove = null;
 		try {
 			decideTurn(board,history);
+			updatePossibleMoves(board,history);
+
 		} catch (InterruptedException e) {
 			
 		} 
+		
 		
 		if(bestMove == null) {
 			//System.out.println("defaulted bestMove to first thing I could find!");
@@ -111,7 +116,6 @@ public class AgentKlum implements Agent {
 		}
 	}
 	
-	
 	/**
 	 * Adds pertinent information to Agent about tile given with maxDrawSeconds as time limit
 	 * @param tile Tile being received
@@ -130,7 +134,18 @@ public class AgentKlum implements Agent {
 		}
 	}
 	
-	
+	private void updatePossibleMoves(Board board, History history) {
+
+			try {
+				GameEvent event = history.getEvent(lastTurn++);
+				final TilePosition spot =  event.getBefore().nextPlaySlot();
+				final int col=spot.col(), row=spot.row();
+				possibleMoves.remove(getPositionHash(row,col));
+			} catch (IllegalArgumentException e) {
+				
+			}
+		
+	}
 	
 	/**
 	 * Creates a timed task to process the deck with maxInitSeconds as time limit
@@ -165,109 +180,19 @@ public class AgentKlum implements Agent {
 		Future<Boolean> future = service.submit(new Callable<Boolean>() {
 			@Override
 			public Boolean call() throws Exception {
-				minimax(board, history, hand);
-				//randomAvoidLoss(board,history);
+				minimax(board, history, hand, 1);
 				return true;
 			}
 		});
 		if(service.poll(timeLimit(maxTurnSeconds), TimeUnit.MILLISECONDS) == null) {
-			System.out.println(" - - - decideTurns: Time's up!");
+//			System.out.println(" - - - decideTurns: Time's up!");
 			future.cancel(true);
 		}
 	}
 	
-	private void minimax(Board board, History history, LinkedList<Tile> myHand) {
-		final TilePosition spot = board.nextPlaySlot();
-	    final int col = spot.col(),
-	    		  row = spot.row();
-	    rec(board,history,null,myHand,1);
-		/*
-		HashMap<Move, Board> moves = getFilteredMoves(board, history, myHand);
-	    HashMap<Double, Move> utilityToMove = getUtilityToMove(board, moves, 0);
-	    double bestUtil = getBestUtility(utilityToMove);
-	    
-	    // Get the position => get tile by ID => get move in linked list by rotation
-	    bestMove = possibleMoves.get(getPositionHash(row,col)).get(utilityToMove.get(bestUtil).getTile().getId()).get(utilityToMove.get(bestUtil).getRotation());
-	    
-	    
 
-	    Tile bestTile = myHand.get(myHand.indexOf(bestMove.getTile()));
-		myHand.remove(bestMove.getTile());
-		if(myHand.isEmpty()) { return; }
-		moves = getFilteredMoves(board, history, myHand);
-	    utilityToMove = getUtilityToMove(board, moves, bestUtil);
-		
-	    bestUtil = getBestUtility(utilityToMove);
-		
-	    //bestMove = possibleMoves.get(getPositionHash(row,col)).get(utilityToMove.get(bestUtil).getTile().getId()).get(utilityToMove.get(bestUtil).getRotation());
-
-	    
-		//minimax(moves.get(bestMove), history, myHand);
-		// minimax recursive
-		// run this same process multiple times
-		// Look at best move for each level
-		// Keep going forward until out of tiles
-		// remvove what we think is the bestMove from our hand
-	    int iterCount = 2;
-	    if(hand.size() < 2) {
-	    	iterCount = hand.size();
-	    }
-	    LinkedList<Tile> removedTiles = new LinkedList<>();
-	    // List of size hand.size();
-	    // follow path to depth 3
-	    // add total utility to the parent tile
-	    //Generate all board states for next 3 tiles
-	    */
-	    /*
-	    for(int i = MAX_DEPTH; i > 0; i--) {
-	    	// Generate all move paths
-	    	for(Move move : getMovesInHand(row,col,myHand)) {
-	    		Board nextBoard = board.apply(move);
-	    		if(filterOut(board, nextBoard, history, move)) {
-	    			break;
-	    		}
-	    		evaluateUtility(move, board, nextBoard);
-	    	}
-	    }
-	    
-		
-		HashMap<Move, Board> moves = getFilteredMoves(board, history, myHand);
-//	    HashMap<Double, Move> utilityToMove = getUtilityToMove(board, moves, 0);
-
-		for(Move move : moves.keySet()) {
-			Board nextBoard = board.apply(move);
-			
-		}
-		
-	    for(final Move move : getMovesInHand(row, col, myHand)) {
-	    	Board nextBoard = board.apply(move);
-	    	if(!filterOut(board, nextBoard, history, move)) {
-	    		moves.put(move, nextBoard);
-	    	}
-	    }
-	    if(moves.isEmpty()) {
-	    	Move defaultMove = new Move(row, col, hand.getFirst(), 0);
-	    	moves.put(defaultMove, board.apply(defaultMove));
-	    }
-	    
-	   double bestUtility = -1;
-	   //double utility = -1;
-	   Move move = null;
-	    for(final Move myMove : getMovesInHand(row,col,myHand)) {
-			double utility = rec(board, history, myMove, myHand, MAX_DEPTH);
-			
-			if(bestUtility < utility) {
-				bestUtility = utility;
-				bestMove = move;
-			}
-			
-	    } 
-	
-	    */
-	}
-
-	
-	private double rec(Board board, History history, Move myMove, LinkedList<Tile> myHand, int depth) {
+	/** The function that evaluates the utility and decides the best ideas. */
+	private double minimax(Board board, History history, LinkedList<Tile> myHand, int depth) {
 		
 		if (depth == 0) {
 			return 1;
@@ -282,25 +207,12 @@ public class AgentKlum implements Agent {
 		for(final Move move : getMovesInHand(row, col, myHand)) {
 	    	Board nextBoard = board.apply(move);
 	    	if(!filterOut(board, nextBoard, history, move)) { 
-	    		LinkedList<Tile> temp = new LinkedList<>();
-	    		for(Tile tile : myHand) {
-	    			if (tile.getId() != move.getTile().getId()) {
-	    				temp.add(tile);
-	    			}
-	    		}
-	    		double multipler = .5;
-	    		java.util.List<Object> agents = nextBoard.getAgentIDs();
-	    	    agents.remove(id);
-	    		for(Object agent : agents) {
-	    			TilePosition agentsSpot = nextBoard.getAgentPosition(agent).getOppositeTilePosition();
-	    			if(agentsSpot.col() == col && agentsSpot.row() == row) {
-	    				multipler /= 4;
-	    			}
-	    		}
 	    		
-	    		double utility = (rec(nextBoard,history,move, temp, depth-1)*multipler) + evaluateUtility(move, board, nextBoard);
+	    		LinkedList<Tile> temp = newHand(myHand, move);
+	    		double modifer = lookAheadUtilityModifer(col, row, nextBoard);
+	    		
+	    		double utility = (minimax(nextBoard,history, temp, depth-1)*modifer) + evaluateUtility(move, board, nextBoard);
 	    	
-
 	    		if(bestUtility < utility) {
 	    			bestUtility = utility;
 	    			bestChoice = move;
@@ -312,6 +224,34 @@ public class AgentKlum implements Agent {
 	}
 
 
+	/**Creates a new hand, removing the provided move*/
+	private LinkedList<Tile> newHand(LinkedList<Tile> myHand, final Move move) {
+		LinkedList<Tile> temp = new LinkedList<>();
+		for(Tile tile : myHand) {
+			if (tile.getId() != move.getTile().getId()) {
+				temp.add(tile);
+			}
+		}
+		return temp;
+	}
+
+
+/**When looking ahead, if a player is near our agent take less stock in the utility given*/
+private double lookAheadUtilityModifer(final int col, final int row, Board nextBoard) {
+	double multipler = .5;
+	java.util.List<Object> agents = nextBoard.getAgentIDs();
+	agents.remove(id);
+	for(Object agent : agents) {
+		TilePosition agentsSpot = nextBoard.getAgentPosition(agent).getOppositeTilePosition();
+		if(agentsSpot.col() == col && agentsSpot.row() == row) {
+			multipler /= 4;
+		}
+	}
+	return multipler;
+}
+
+
+	/**No Longer in use, but was a way to determine the utility and the move association.*/
 	private double getBestUtility(HashMap<Double, Move> utilityToMove) {
 		double bestUtil = -1;
 	    for(double util : utilityToMove.keySet()) {
@@ -322,20 +262,6 @@ public class AgentKlum implements Agent {
 		return bestUtil;
 	}
 	
-//	private LinkedList<Move> minimaxRec(Board board, History history, LinkedList<Tile> myHand, double utilitySoFar, LinkedList<Move> moveSequence) {
-//		if(myHand.isEmpty()) { return null; }
-//		LinkedList<Move> list = new LinkedList<>();
-//		//list.addAll(minimaxRec)
-//		list.add(bestMove);
-//		return (minimaxRec(board, history, myHand, utilitySoFar, moveSequence));
-//		
-//		HashMap<Move, Board> moves = getFilteredMoves(board, history, myHand);
-//	    HashMap<Double, Move> utilityToMove = getUtilityToMove(board, moves, utilitySoFar);
-//	    
-//	    double bestUtil = getBestUtility(utilityToMove);
-//		
-//		return 0;
-//	}
 
 
 	/** Gets a HashMap of with key utility and value move */
@@ -349,7 +275,7 @@ public class AgentKlum implements Agent {
 	}
 
 
-
+	/**Created a hashMap from moves to Boards. This allows for only calculating board state once*/
 	private HashMap<Move, Board> getFilteredMoves(Board board, History history, LinkedList<Tile> myHand) {
 		final TilePosition spot = board.nextPlaySlot();
 	    final int col = spot.col(),
@@ -369,14 +295,23 @@ public class AgentKlum implements Agent {
 		return moves;
 	}
 
+	/** Looks at several different factors*/
 	private double evaluateUtility( final Move move, Board board, Board nextBoard) {
 		double value = 0;
 		//value += weightEdges(move, nextBoard);
 		//value += weightOptions(move, nextBoard);
 		value += killOthers(move, board, nextBoard);
 		value += avoidAdjecentPlayers(move,nextBoard);
+		value += guessOpponentMove(move,nextBoard);
 		return value;
 	}
+
+	private double guessOpponentMove(Move move, Board nextBoard) {
+		
+		return 0;
+	}
+
+
 
 	/**A move is penalized if it decides to play a move that will bring it next to another player*/
 	private double avoidAdjecentPlayers(Move move, Board nextBoard) {

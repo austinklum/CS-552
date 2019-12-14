@@ -46,7 +46,7 @@ public final class Run {
   public static void myTourney(boolean full, int games) throws IOException {
 	String fileName = "testKlum.tex";
     final SingleTournament tourney = new SingleTournament("Test tournament", games);
-    final Object[] ids = new Object[] { "Klum", "Beta", "Gamma", "Delta", "Alpha", "lil-Beta", "lil-Gamma", "lil-Delta" };
+    final Object[] ids = new Object[] { "Klum", "Beta", "Gamma", "Delta"};
     Log log = null;
     if(full) {
     	log = Logs.latexGameLog(fileName);
@@ -55,9 +55,7 @@ public final class Run {
     }
     tourney.go(new AgentFactory[] {
     	new Factory(), RandomAvoidLoss.FACTORY,
-    	RandomAvoidLoss.FACTORY, RandomAvoidLoss.FACTORY,
-    	RandomAvoidLoss.FACTORY, RandomAvoidLoss.FACTORY,
-        RandomAvoidLoss.FACTORY, RandomAvoidLoss.FACTORY
+    	RandomAvoidLoss.FACTORY, RandomAvoidLoss.FACTORY
       }, 
       ids,
       new Random(),
