@@ -3,8 +3,11 @@ package h5.klum;
 import static uwlcs452552.h5.Util.randomizeArray;
 
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.Queue;
 import java.util.Random;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletionService;
@@ -158,7 +161,7 @@ public class AgentKlum implements Agent {
 		Future<Boolean> future = service.submit(new Callable<Boolean>() {
 			@Override
 			public Boolean call() throws Exception {
-				minimax(board,history);
+				minimax(board, history, hand);
 				return true;
 			}
 		});
@@ -168,32 +171,107 @@ public class AgentKlum implements Agent {
 		}
 	}
 	
-	private void minimax(Board board, History history) {
+	private void minimax(Board board, History history, LinkedList<Tile> myHand) {
+		final TilePosition spot = board.nextPlaySlot();
+	    final int col = spot.col(),
+	    		  row = spot.row();
+		
+		HashMap<Move, Board> moves = getFilteredMoves(board, history, myHand);
+	    HashMap<Double, Move> utilityToMove = getUtilityToMove(board, moves, 0);
+	    double bestUtil = getBestUtility(utilityToMove);
+	    
+	    // Get the position => get tile by ID => get move in linked list by rotation
+	    bestMove = possibleMoves.get(getPositionHash(row,col)).get(utilityToMove.get(bestUtil).getTile().getId()).get(utilityToMove.get(bestUtil).getRotation());
+	    
+
+	    Tile bestTile = myHand.get(myHand.indexOf(bestMove.getTile()));
+		myHand.remove(bestMove.getTile());
+		if(myHand.isEmpty()) { return; }
+		moves = getFilteredMoves(board, history, myHand);
+	    utilityToMove = getUtilityToMove(board, moves, bestUtil);
+		
+	    bestUtil = getBestUtility(utilityToMove);
+		
+	    //bestMove = possibleMoves.get(getPositionHash(row,col)).get(utilityToMove.get(bestUtil).getTile().getId()).get(utilityToMove.get(bestUtil).getRotation());
+
+	    
+		//minimax(moves.get(bestMove), history, myHand);
+		// minimax recursive
+		// run this same process multiple times
+		// Look at best move for each level
+		// Keep going forward until out of tiles
+		// remvove what we think is the bestMove from our hand
+	    
+	}
+
+
+
+	private double getBestUtility(HashMap<Double, Move> utilityToMove) {
+		double bestUtil = -1;
+	    for(double util : utilityToMove.keySet()) {
+	    	if(bestUtil < util) {
+	    		bestUtil = util;
+	    	}
+	    }
+		return bestUtil;
+	}
+	
+	private LinkedList<Move> minimaxRec(Board board, History history, LinkedList<Tile> myHand, double utilitySoFar, LinkedList<Move> moveSequence) {
+		if(myHand.isEmpty()) { return null; }
+		LinkedList<Move> list = new LinkedList<>();
+		//list.addAll(minimaxRec)
+		list.add(bestMove);
+		return (minimaxRec(board, history, myHand, utilitySoFar, moveSequence));
+		
+		HashMap<Move, Board> moves = getFilteredMoves(board, history, myHand);
+	    HashMap<Double, Move> utilityToMove = getUtilityToMove(board, moves, utilitySoFar);
+	    
+	    double bestUtil = getBestUtility(utilityToMove);
+		
+		return 0;
+	}
+
+
+	/** Gets a HashMap of with key utility and value move */
+	private HashMap<Double, Move> getUtilityToMove(Board board, HashMap<Move, Board> moves, double utilitySoFar) {
+		HashMap<Double, Move> utilityToMove = new HashMap<>();
+	    for (final Move move : moves.keySet()) {
+	    	Board nextBoard = moves.get(move);
+	    	utilityToMove.put(evaluateUtility(move, board, nextBoard) + utilitySoFar, move);
+	    }
+		return utilityToMove;
+	}
+
+
+
+	private HashMap<Move, Board> getFilteredMoves(Board board, History history, LinkedList<Tile> myHand) {
 		final TilePosition spot = board.nextPlaySlot();
 	    final int col = spot.col(),
 	    		  row = spot.row();
 	    HashMap<Move, Board> moves = new HashMap<>();
 	   
-	    for(final Move move : getMovesInMyHand(row,col)) {
+	    for(final Move move : getMovesInHand(row, col, myHand)) {
 	    	Board nextBoard = board.apply(move);
 	    	if(!filterOut(board, nextBoard, history, move, moves)) {
 	    		moves.put(move, nextBoard);
 	    	}
 	    }
-	    
-	    double bestValue = -1;
-	    for (final Move move : moves.keySet()) {
-	    	// Prefer edges of board
-	    	Board nextBoard = moves.get(move);
-	    	double value = -1;
-	    	value += weightEdges(move, nextBoard);
-	    	value += killOthers(move, board, nextBoard);
-	    	if(bestValue < value) {
-	    		bestMove = possibleMoves.get(getPositionHash(row,col)).get(move.getTile().getId()).get(move.getRotation());
-	    		bestValue = value;
-	    	}
+	    if(moves.isEmpty()) {
+	    	Move defaultMove = new Move(row, col, hand.getFirst(), 0);
+	    	moves.put(defaultMove, board.apply(defaultMove));
 	    }
-	    
+		return moves;
+	}
+
+	private void lookAhead() {
+		
+	}
+
+	private double evaluateUtility( final Move move, Board board, Board nextBoard) {
+		double value = -1;
+		value += weightEdges(move, nextBoard);
+		value += killOthers(move, board, nextBoard);
+		return value;
 	}
 
 	private double weightEdges(Move move, Board nextBoard) {
@@ -211,7 +289,7 @@ public class AgentKlum implements Agent {
 	}
 	
 	private double killOthers(Move move, Board board, Board nextBoard) {
-		if(nextBoard.isInGame(id) && nextBoard.getActiveAgentCount() < board.getActiveAgentCount()) {
+		if(nextBoard.getActiveAgentCount() < board.getActiveAgentCount()) {
 			return board.getActiveAgentCount() * .75;
 		}
 		return 0;
@@ -237,6 +315,12 @@ public class AgentKlum implements Agent {
 			      for(int rotation = 0; rotation < 4; rotation++) {
 				       moves.add(new Move(row, col, tile, rotation)); 
 				  }
+			   moves.sort(new Comparator<Move>() {
+					@Override
+					public int compare(Move move1, Move move2) {
+						return move1.getRotation() - move2.getRotation();
+					}
+			   });
 			      possibleMoves.get(getPositionHash(row, col)).put(tile.getId(), moves);
 			 }
 			 
@@ -247,9 +331,9 @@ public class AgentKlum implements Agent {
 		return row + "," + col;
 	}
 	
-	private LinkedList<Move> getMovesInMyHand(int row, int col){
+	private LinkedList<Move> getMovesInHand(int row, int col, LinkedList<Tile> myHand){
 		LinkedList<Move> moves = new LinkedList<>();
-		for (Tile tile : hand) {
+		for (Tile tile : myHand) {
 			moves.addAll(possibleMoves.get(getPositionHash(row,col)).get(tile.getId()));
 		}
 		return moves;
@@ -266,7 +350,7 @@ public class AgentKlum implements Agent {
 
 	    // Look through the moves, and return the first one where we
 	    // survive the move.
-	    LinkedList<Move> moves = getMovesInMyHand(row,col);
+	    LinkedList<Move> moves = getMovesInHand(row,col,hand);
 	    for(final Move move : moves) {
 	      if (board.apply(move).isInGame(id)) {
 	        hand.remove(move.getTile());
